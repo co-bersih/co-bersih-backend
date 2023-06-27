@@ -31,7 +31,7 @@ class User(AbstractUser):
     username = None
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     email = models.EmailField(max_length=100, unique=True)
-    name = models.CharField(max_length=100, unique=True)
+    name = models.CharField(max_length=100)
     date_joined = models.DateTimeField(auto_now_add=True)
     bio = models.CharField(max_length=280, blank=True)
     profile_image = CloudinaryField('image', null=True, blank=True, default=None)
