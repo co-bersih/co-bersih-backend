@@ -1,6 +1,8 @@
 import uuid
 from django.db import models
 from django.contrib.auth.models import AbstractUser, BaseUserManager
+from django.conf import settings
+from cloudinary.models import CloudinaryField
 
 
 # Create your models here.
@@ -28,10 +30,11 @@ class UserManager(BaseUserManager):
 class User(AbstractUser):
     username = None
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
-    name = models.CharField(max_length=100, unique=True)
     email = models.EmailField(max_length=100, unique=True)
+    name = models.CharField(max_length=100, unique=True)
     date_joined = models.DateTimeField(auto_now_add=True)
     bio = models.CharField(max_length=280, blank=True)
+    profile_image = CloudinaryField('image', null=True, blank=True, default=None)
     is_admin = models.BooleanField(default=False)
     is_active = models.BooleanField(default=True)
     is_staff = models.BooleanField(default=False)
@@ -44,3 +47,7 @@ class User(AbstractUser):
 
     def __str__(self):
         return self.name
+
+    @property
+    def profile_image_url(self):
+        return f'https://res.cloudinary.com/{settings.CLOUDINARY_CLOUD_NAME}/{self.profile_image}'
