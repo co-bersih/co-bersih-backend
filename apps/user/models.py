@@ -35,6 +35,7 @@ class User(AbstractUser):
     date_joined = models.DateTimeField(auto_now_add=True)
     bio = models.CharField(max_length=280, blank=True)
     profile_image = CloudinaryField('image', null=True, blank=True, default=None)
+    joined_events = models.ManyToManyField('event.Event', related_name='joined_users')
     is_admin = models.BooleanField(default=False)
     is_active = models.BooleanField(default=True)
     is_staff = models.BooleanField(default=False)
@@ -50,4 +51,6 @@ class User(AbstractUser):
 
     @property
     def profile_image_url(self):
-        return f'https://res.cloudinary.com/{settings.CLOUDINARY_CLOUD_NAME}/{self.profile_image}'
+        if self.profile_image:
+            return f'https://res.cloudinary.com/{settings.CLOUDINARY_CLOUD_NAME}/{self.profile_image}'
+        return ''

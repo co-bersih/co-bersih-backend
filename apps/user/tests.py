@@ -145,6 +145,24 @@ class PatchUserDetailTest(TestCase):
         response = self.client.patch(self.user_detail_url, updated_data)
         self.assertEquals(response.status_code, status.HTTP_200_OK)
 
+    def test_change_password_another_user(self):
+        another_data = {
+            'email': 'user2_cobersih@gmail.com',
+            'password': 'password',
+            'name': 'user2_cobersih',
+            'bio': 'user2 bio'
+        }
+        register_response = self.client.post(self.register_url, another_data)
+        another_user_detail = register_response.data
+        another_user_detail_url = reverse('user-detail', kwargs={'pk': another_user_detail['id']})
+
+        self.client.credentials(HTTP_AUTHORIZATION='Bearer ' + self.token['access'])
+        updated_data = {
+            'password': 'new_password'
+        }
+        response = self.client.patch(another_user_detail_url, updated_data)
+        self.assertIsInstance(response.data['detail'], ErrorDetail)
+
     def test_change_name(self):
         self.client.credentials(HTTP_AUTHORIZATION='Bearer ' + self.token['access'])
 
