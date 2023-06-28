@@ -120,7 +120,7 @@ class CurrentUserDetailTest(TestCase):
     def test_current_user_detail(self):
         self.client.credentials(HTTP_AUTHORIZATION='Bearer ' + self.token['access'])
         response = self.client.get(self.current_user_detail_url)
-        self.assertEquals(response.data[0], self.user_detail)
+        self.assertEquals(response.data, self.user_detail)
         self.assertEquals(response.status_code, status.HTTP_200_OK)
 
     def test_current_user_detail_without_credentials(self):
