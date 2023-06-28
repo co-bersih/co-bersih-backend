@@ -32,7 +32,27 @@ SECRET_KEY = django.core.management.utils.get_random_secret_key()
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = env("DEBUG")
 
-ALLOWED_HOSTS = []
+CSRF_ALLOWED_ORIGINS = ['https://co-bersih-backend.fly.dev']
+CSRF_TRUSTED_ORIGINS = ['https://co-bersih-backend.fly.dev']
+
+CORS_ALLOW_HEADERS = [
+    "accept",
+    "accept-encoding",
+    "access-control-allow-origin",
+    "authorization",
+    "content-type",
+    "dnt",
+    "origin",
+    "user-agent",
+    "x-csrftoken",
+    "x-requested-with",
+    "cache-control",
+    "pragma",
+]
+
+ALLOWED_HOSTS = [
+    'co-bersih-backend.fly.dev'
+]
 
 
 # Application definition
