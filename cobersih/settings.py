@@ -13,6 +13,7 @@ https://docs.djangoproject.com/en/4.2/ref/settings/
 from pathlib import Path
 from datetime import timedelta
 import environ
+import django.core.management.utils
 import cloudinary
 
 # Env
@@ -32,7 +33,27 @@ SECRET_KEY = env('SECRET_KEY')
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = env('DEBUG')
 
-ALLOWED_HOSTS = []
+CSRF_ALLOWED_ORIGINS = ['https://co-bersih-backend.fly.dev']
+CSRF_TRUSTED_ORIGINS = ['https://co-bersih-backend.fly.dev']
+
+CORS_ALLOW_HEADERS = [
+    "accept",
+    "accept-encoding",
+    "access-control-allow-origin",
+    "authorization",
+    "content-type",
+    "dnt",
+    "origin",
+    "user-agent",
+    "x-csrftoken",
+    "x-requested-with",
+    "cache-control",
+    "pragma",
+]
+
+ALLOWED_HOSTS = [
+    'co-bersih-backend.fly.dev'
+]
 
 # Application definition
 
@@ -127,6 +148,7 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/4.2/howto/static-files/
 
 STATIC_URL = 'static/'
+STATIC_ROOT = BASE_DIR / 'staticfiles'
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/4.2/ref/settings/#default-auto-field
