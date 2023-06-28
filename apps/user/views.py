@@ -1,4 +1,4 @@
-from rest_framework.generics import CreateAPIView, RetrieveUpdateAPIView
+from rest_framework.generics import CreateAPIView, RetrieveUpdateAPIView, ListAPIView
 from rest_framework.parsers import FormParser, MultiPartParser
 from rest_framework import permissions
 
@@ -19,3 +19,11 @@ class UserView(RetrieveUpdateAPIView):
     serializer_class = UserSerializer
     permission_classes = [permissions.IsAuthenticatedOrReadOnly,
                           IsCurrentUserOrReadOnly]
+
+
+class CurrentUserView(ListAPIView):
+    serializer_class = UserSerializer
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get_queryset(self):
+        return User.objects.all().filter(pk=self.request.user.id)

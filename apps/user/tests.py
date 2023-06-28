@@ -30,21 +30,25 @@ class RegisterTest(TestCase):
         User.objects.create(**self.data)
         response = self.client.post(self.register_url, self.data)
         self.assertIsInstance(response.data['email'][0], ErrorDetail)
+        self.assertEquals(response.status_code, status.HTTP_400_BAD_REQUEST)
 
     def test_email_invalid(self):
         self.data['email'] = 'invalid_email'
         response = self.client.post(self.register_url, self.data)
         self.assertIsInstance(response.data['email'][0], ErrorDetail)
+        self.assertEquals(response.status_code, status.HTTP_400_BAD_REQUEST)
 
     def test_password_empty(self):
         self.data['password'] = ''
         response = self.client.post(self.register_url, self.data)
         self.assertIsInstance(response.data['password'][0], ErrorDetail)
+        self.assertEquals(response.status_code, status.HTTP_400_BAD_REQUEST)
 
     def test_name_empty(self):
         self.data['name'] = ''
         response = self.client.post(self.register_url, self.data)
         self.assertIsInstance(response.data['name'][0], ErrorDetail)
+        self.assertEquals(response.status_code, status.HTTP_400_BAD_REQUEST)
 
 
 class LoginTest(TestCase):
@@ -77,6 +81,7 @@ class LoginTest(TestCase):
             'password': 'invalid_password',
         }
         response = self.client.post(self.login_url, login_data)
+        self.assertIsInstance(response.data['detail'], ErrorDetail)
         self.assertEquals(response.status_code, status.HTTP_401_UNAUTHORIZED)
 
     def test_email_invalid(self):
@@ -85,6 +90,42 @@ class LoginTest(TestCase):
             'password': self.data['password'],
         }
         response = self.client.post(self.login_url, login_data)
+        self.assertIsInstance(response.data['detail'], ErrorDetail)
+        self.assertEquals(response.status_code, status.HTTP_401_UNAUTHORIZED)
+
+
+class CurrentUserDetailTest(TestCase):
+    register_url = reverse('user-register')
+    login_url = reverse('user-login')
+    current_user_detail_url = reverse('current-user-detail')
+
+    def setUp(self):
+        self.client = APIClient()
+        self.data = {
+            'email': 'user_cobersih@gmail.com',
+            'password': 'password',
+            'name': 'user_cobersih',
+            'bio': 'user bio'
+        }
+        response = self.client.post(self.register_url, self.data)
+        self.user_detail = response.data
+
+        login_data = {
+            'email': self.data['email'],
+            'password': self.data['password'],
+        }
+        login_response = self.client.post(self.login_url, login_data)
+        self.token = login_response.data
+
+    def test_current_user_detail(self):
+        self.client.credentials(HTTP_AUTHORIZATION='Bearer ' + self.token['access'])
+        response = self.client.get(self.current_user_detail_url)
+        self.assertEquals(response.data[0], self.user_detail)
+        self.assertEquals(response.status_code, status.HTTP_200_OK)
+
+    def test_current_user_detail_without_credentials(self):
+        response = self.client.get(self.current_user_detail_url)
+        self.assertIsInstance(response.data['detail'], ErrorDetail)
         self.assertEquals(response.status_code, status.HTTP_401_UNAUTHORIZED)
 
 
