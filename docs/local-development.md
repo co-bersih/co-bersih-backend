@@ -38,9 +38,12 @@ Pastikan bahwa `Python`, `pip`, dan `postgresql` sudah ter-*install* pada komput
     DB_PASSWORD=postgres 
     DB_HOST=localhost
     DB_PORT=5432
+    CLOUDINARY_CLOUD_NAME=dwoicn6yn
+    CLOUDINARY_API_KEY=449652978967261
+    CLOUDINARY_API_SECRET=Km49iNGZcjLtTo54ah9cZ4SMJYo
     ```
 
-    `DB_USER` dan `DB_PASSWORD` dapat Anda sesuaikan dengan `username` dan `password` akun postgres Anda.
+    `DB_USER` dan `DB_PASSWORD` dapat Anda sesuaikan dengan `username` dan `password` akun postgres Anda. Selain itu, variabel yang berkaitan dengan cloudinary dapat disesauikan pada saat produksi.
 
     > :memo: Note: Perhatikan bahwa pada **production enviroment** `SECRET_KEY` harus di-*generate* [^1] dan `DEBUG` di-*set* dengan `False`.
 
