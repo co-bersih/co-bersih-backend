@@ -11,12 +11,12 @@ WORKDIR /code
 
 COPY requirements.txt /tmp/requirements.txt
 ENV SECRET_KEY "non-secret-key-for-building-purposes"
-RUN python manage.py collectstatic --noinput
 RUN set -ex && \
     pip install --upgrade pip && \
     pip install -r /tmp/requirements.txt && \
     rm -rf /root/.cache/
 COPY . /code
+RUN python manage.py collectstatic --noinput
 
 EXPOSE 8000
 
