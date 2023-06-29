@@ -16,7 +16,7 @@ class RegisterTest(TestCase):
         self.client = APIClient()
         self.data = {
             'email': 'user_cobersih@gmail.com',
-            'password': 'password',
+            'password': 'secretpass',
             'name': 'user_cobersih',
             'bio': 'user bio'
         }
@@ -44,6 +44,12 @@ class RegisterTest(TestCase):
         self.assertEquals(response.status_code, status.HTTP_400_BAD_REQUEST)
         self.assertIsInstance(response.data['password'][0], ErrorDetail)
 
+    def test_password_common(self):
+        self.data['password'] = 'password'
+        response = self.client.post(self.REGISTER_URL, self.data)
+        self.assertEquals(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertIsInstance(response.data['password'][0], ErrorDetail)
+
     def test_name_empty(self):
         self.data['name'] = ''
         response = self.client.post(self.REGISTER_URL, self.data)
@@ -59,7 +65,7 @@ class LoginTest(TestCase):
         self.client = APIClient()
         self.data = {
             'email': 'user_cobersih@gmail.com',
-            'password': 'password',
+            'password': 'secretpass',
             'name': 'user_cobersih',
             'bio': 'user bio'
         }
@@ -103,7 +109,7 @@ class CurrentUserDetailTest(TestCase):
         self.client = APIClient()
         self.data = {
             'email': 'user_cobersih@gmail.com',
-            'password': 'password',
+            'password': 'secretpass',
             'name': 'user_cobersih',
             'bio': 'user bio'
         }
@@ -136,7 +142,7 @@ class UserDetailTest(TestCase):
         self.client = APIClient()
         self.data = {
             'email': 'user_cobersih@gmail.com',
-            'password': 'password',
+            'password': 'secretpass',
             'name': 'user_cobersih',
             'bio': 'user bio'
         }
@@ -163,7 +169,7 @@ class PatchUserDetailTest(TestCase):
         self.client = APIClient()
         self.data = {
             'email': 'user_cobersih@gmail.com',
-            'password': 'password',
+            'password': 'secretpass',
             'name': 'user_cobersih',
             'bio': 'user bio'
         }
@@ -181,15 +187,47 @@ class PatchUserDetailTest(TestCase):
     def test_change_password(self):
         self.client.credentials(HTTP_AUTHORIZATION='Bearer ' + self.token['access'])
         updated_data = {
-            'password': 'new_password'
+            'old_password': self.data['password'],
+            'new_password': 'newsecretpass'
         }
         response = self.client.patch(self.user_detail_url, updated_data)
         self.assertEquals(response.status_code, status.HTTP_200_OK)
 
+    def test_change_password_old_password_wrong(self):
+        self.client.credentials(HTTP_AUTHORIZATION='Bearer ' + self.token['access'])
+        updated_data = {
+            'old_password': self.data['password'] + "wrong",
+            'new_password': 'newsecretpass'
+        }
+        response = self.client.patch(self.user_detail_url, updated_data)
+        self.assertEquals(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertIsInstance(response.data['old_password'][0], ErrorDetail)
+
+    def test_change_password_new_password_common(self):
+        self.client.credentials(HTTP_AUTHORIZATION='Bearer ' + self.token['access'])
+        updated_data = {
+            'old_password': self.data['password'],
+            'new_password': 'password'
+        }
+        response = self.client.patch(self.user_detail_url, updated_data)
+        self.assertEquals(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertIsInstance(response.data['new_password'][0], ErrorDetail)
+
+    def test_change_password_invalid(self):
+        """
+        User is not allowed to change password without providing `old_password` and `new_password`
+        """
+        self.client.credentials(HTTP_AUTHORIZATION='Bearer ' + self.token['access'])
+        updated_data = {
+            'password': 'new_password'
+        }
+        response = self.client.patch(self.user_detail_url, updated_data)
+        self.assertEquals(response.status_code, status.HTTP_400_BAD_REQUEST)
+
     def test_change_password_another_user(self):
         another_data = {
             'email': 'user2_cobersih@gmail.com',
-            'password': 'password',
+            'password': 'secretpass',
             'name': 'user2_cobersih',
             'bio': 'user2 bio'
         }
@@ -199,7 +237,7 @@ class PatchUserDetailTest(TestCase):
 
         self.client.credentials(HTTP_AUTHORIZATION='Bearer ' + self.token['access'])
         updated_data = {
-            'password': 'new_password'
+            'password': 'secretpass'
         }
         response = self.client.patch(another_user_detail_url, updated_data)
         self.assertIsInstance(response.data['detail'], ErrorDetail)
