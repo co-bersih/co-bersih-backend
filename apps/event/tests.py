@@ -37,7 +37,7 @@ class CRUDEventTest(TestCase):
     def register_user(self):
         register_data = {
             'email': 'user_cobersih@gmail.com',
-            'password': 'password',
+            'password': 'secretpass',
             'name': 'user_cobersih',
             'bio': 'user bio'
         }

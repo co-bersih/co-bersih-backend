@@ -23,7 +23,8 @@ class EventViewSet(viewsets.ModelViewSet):
                           IsHostOrReadOnly]
 
     def perform_create(self, serializer):
-        serializer.save(host=self.request.user)
+        event = serializer.save(host=self.request.user)
+        event.staffs.add(self.request.user)
 
     def get_serializer_class(self):
         if self.action == 'retrieve':
