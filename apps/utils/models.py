@@ -25,3 +25,10 @@ class BaseModel(models.Model):
         """
         self.is_deleted = True
         self.save()
+
+
+class Dummy(BaseModel):
+    class Meta:
+        unique_together = ['name', 'is_deleted']
+
+    name = models.CharField(max_length=100)
