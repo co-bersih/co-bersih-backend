@@ -3,19 +3,25 @@ from django.urls import reverse
 from rest_framework import status
 from rest_framework.test import APIClient
 
+from apps.user.tests import UserManager
 from .models import Event
 
 
 # Create your tests here.
 class CRUDEventTest(TestCase):
-    REGISTER_URL = reverse('user-register')
-    LOGIN_URL = reverse('user-login')
     EVENT_LIST_URL = reverse('event-list')
 
     def setUp(self):
         self.client = APIClient()
-        register_data = self.register_user()
-        self.login_user(register_data)
+        self.user_manager = UserManager(self.client)
+
+        register_data = self.user_manager.register_user({
+            'email': 'user_cobersih@gmail.com',
+            'password': 'secretpass',
+            'name': 'user_cobersih',
+            'bio': 'user bio'
+        })
+        self.user_manager.login_user(register_data)
         self.created_event_data = {
             'name': 'event cobersih',
             'description': 'deskripsi event cobersih',
@@ -25,31 +31,10 @@ class CRUDEventTest(TestCase):
             'start_date': '2023-01-01',
             'end_date': '2023-01-02'
         }
-        self.client.credentials(HTTP_AUTHORIZATION='Bearer ' + self.token['access'])
 
-    def login_user(self, register_data):
-        login_data = {
-            'email': register_data['email'],
-            'password': register_data['password']
-        }
-        response = self.client.post(self.LOGIN_URL, login_data)
-        self.token = response.data
-
-    def register_user(self):
-        register_data = {
-            'email': 'user_cobersih@gmail.com',
-            'password': 'secretpass',
-            'name': 'user_cobersih',
-            'bio': 'user bio'
-        }
-        self.client.post(self.REGISTER_URL, register_data)
-        return register_data
-
-    def create_event(self):
-        create_response = self.client.post(self.EVENT_LIST_URL, self.created_event_data)
-        created_event_id = create_response.data['id']
-        event_detail_url = reverse('event-detail', kwargs={'pk': created_event_id})
-        return event_detail_url
+    def create_event(self, created_event_data):
+        response = self.client.post(self.EVENT_LIST_URL, created_event_data)
+        return response.data['id']
 
     def test_create_list_event(self):
         total = 10
@@ -67,7 +52,7 @@ class CRUDEventTest(TestCase):
         self.assertEquals(response.status_code, status.HTTP_201_CREATED)
 
     def test_create_event_without_credentials(self):
-        self.client.credentials()
+        self.user_manager.logout_user()
         response = self.client.post(self.EVENT_LIST_URL, self.created_event_data)
         self.assertEquals(response.status_code, status.HTTP_401_UNAUTHORIZED)
 
@@ -89,40 +74,67 @@ class CRUDEventTest(TestCase):
         self.assertTrue('supports' in retrieve_response.data.keys())
 
     def test_patch_event(self):
-        event_detail_url = self.create_event()
+        created_event_id = self.create_event(self.created_event_data)
+        event_detail_url = reverse('event-detail', kwargs={'pk': created_event_id})
 
         updated_data = {
             'name': 'event cobersih update'
         }
 
-        patch_response = self.client.patch(event_detail_url, updated_data)
-        self.assertEquals(patch_response.status_code, status.HTTP_200_OK)
-        self.assertEquals(patch_response.data['name'], updated_data['name'])
+        response = self.client.patch(event_detail_url, updated_data)
+        self.assertEquals(response.status_code, status.HTTP_200_OK)
+        self.assertEquals(response.data['name'], updated_data['name'])
 
     def test_patch_event_invalid_start_date(self):
-        event_detail_url = self.create_event()
+        created_event_id = self.create_event(self.created_event_data)
+        event_detail_url = reverse('event-detail', kwargs={'pk': created_event_id})
 
         updated_data = {
             'start_date': '2023-01-03'
         }
 
-        patch_response = self.client.patch(event_detail_url, updated_data)
-        self.assertEquals(patch_response.status_code, status.HTTP_400_BAD_REQUEST)
-        self.assertTrue('invalid_date' in patch_response.data.keys())
+        response = self.client.patch(event_detail_url, updated_data)
+        self.assertEquals(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertTrue('invalid_date' in response.data.keys())
 
     def test_patch_event_invalid_end_date(self):
-        event_detail_url = self.create_event()
+        created_event_id = self.create_event(self.created_event_data)
+        event_detail_url = reverse('event-detail', kwargs={'pk': created_event_id})
 
         updated_data = {
             'end_date': '2022-01-01'
         }
 
-        patch_response = self.client.patch(event_detail_url, updated_data)
-        self.assertEquals(patch_response.status_code, status.HTTP_400_BAD_REQUEST)
-        self.assertTrue('invalid_date' in patch_response.data.keys())
+        response = self.client.patch(event_detail_url, updated_data)
+        self.assertEquals(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertTrue('invalid_date' in response.data.keys())
 
     def test_delete_event(self):
-        event_detail_url = self.create_event()
-        delete_response = self.client.delete(event_detail_url)
-        self.assertEquals(delete_response.status_code, status.HTTP_204_NO_CONTENT)
+        created_event_id = self.create_event(self.created_event_data)
+        event_detail_url = reverse('event-detail', kwargs={'pk': created_event_id})
+        response = self.client.delete(event_detail_url)
+        self.assertEquals(response.status_code, status.HTTP_204_NO_CONTENT)
         self.assertTrue(len(Event.objects.all()) == 0)
+
+    def test_join_event(self):
+        created_event_id = self.create_event(self.created_event_data)
+
+        register_data = self.user_manager.register_user({
+            'email': 'user_cobersih2@gmail.com',
+            'password': 'secretpass',
+            'name': 'user_cobersih2',
+            'bio': 'user2 bio'
+        })
+        self.user_manager.login_user(register_data)
+
+        join_event_url = reverse('event-join', kwargs={'pk': created_event_id})
+        response = self.client.post(join_event_url)
+
+        self.assertEquals(response.status_code, status.HTTP_200_OK)
+
+    def test_join_event_as_host(self):
+        created_event_id = self.create_event(self.created_event_data)
+        join_event_url = reverse('event-join', kwargs={'pk': created_event_id})
+        response = self.client.post(join_event_url)
+
+        self.assertEquals(response.status_code, status.HTTP_400_BAD_REQUEST)

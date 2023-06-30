@@ -8,6 +8,31 @@ import uuid
 
 
 # Create your tests here.
+class UserManager:
+    REGISTER_URL = reverse('user-register')
+    LOGIN_URL = reverse('user-login')
+
+    def __init__(self, client):
+        self.client = client
+
+    def login_user(self, register_data):
+        login_data = {
+            'email': register_data['email'],
+            'password': register_data['password']
+        }
+        response = self.client.post(self.LOGIN_URL, login_data)
+        token = response.data
+        self.client.credentials(HTTP_AUTHORIZATION='Bearer ' + token['access'])
+
+    def register_user(self, user_detail):
+        response = self.client.post(self.REGISTER_URL, user_detail)
+        response.data['password'] = user_detail['password']
+        return response.data
+
+    def logout_user(self):
+        self.client.credentials()
+
+
 class RegisterTest(TestCase):
     REGISTER_URL = reverse('user-register')
 
@@ -100,35 +125,28 @@ class LoginTest(TestCase):
 
 
 class CurrentUserDetailTest(TestCase):
-    REGISTER_URL = reverse('user-register')
-    LOGIN_URL = reverse('user-login')
     CURRENT_USER_DETAIL_URL = reverse('current-user-detail')
 
     def setUp(self):
         self.client = APIClient()
-        self.data = {
+        self.user_manager = UserManager(self.client)
+
+        self.user_detail = self.user_manager.register_user({
             'email': 'user_cobersih@gmail.com',
             'password': 'secretpass',
             'name': 'user_cobersih',
             'bio': 'user bio'
-        }
-        response = self.client.post(self.REGISTER_URL, self.data)
-        self.user_detail = response.data
+        })
 
-        login_data = {
-            'email': self.data['email'],
-            'password': self.data['password'],
-        }
-        login_response = self.client.post(self.LOGIN_URL, login_data)
-        self.token = login_response.data
+        self.user_manager.login_user(self.user_detail)
 
     def test_current_user_detail(self):
-        self.client.credentials(HTTP_AUTHORIZATION='Bearer ' + self.token['access'])
         response = self.client.get(self.CURRENT_USER_DETAIL_URL)
         self.assertEquals(response.status_code, status.HTTP_200_OK)
-        self.assertEquals(response.data, self.user_detail)
+        self.assertEquals(response.data['id'], self.user_detail['id'])
 
     def test_current_user_detail_without_credentials(self):
+        self.user_manager.logout_user()
         response = self.client.get(self.CURRENT_USER_DETAIL_URL)
         self.assertEquals(response.status_code, status.HTTP_401_UNAUTHORIZED)
         self.assertTrue(len(response.data.keys()) == 1 and 'detail' in response.data.keys())
@@ -166,36 +184,29 @@ class PatchUserDetailTest(TestCase):
 
     def setUp(self):
         self.client = APIClient()
-        self.data = {
+        self.user_manager = UserManager(self.client)
+
+        self.user_detail = self.user_manager.register_user({
             'email': 'user_cobersih@gmail.com',
             'password': 'secretpass',
             'name': 'user_cobersih',
             'bio': 'user bio'
-        }
-        register_response = self.client.post(self.REGISTER_URL, self.data)
-        self.user_detail = register_response.data
+        })
         self.user_detail_url = reverse('user-detail', kwargs={'pk': self.user_detail['id']})
 
-        login_data = {
-            'email': self.data['email'],
-            'password': self.data['password'],
-        }
-        login_response = self.client.post(self.LOGIN_URL, login_data)
-        self.token = login_response.data
+        self.user_manager.login_user(self.user_detail)
 
     def test_change_password(self):
-        self.client.credentials(HTTP_AUTHORIZATION='Bearer ' + self.token['access'])
         updated_data = {
-            'old_password': self.data['password'],
+            'old_password': self.user_detail['password'],
             'new_password': 'newsecretpass'
         }
         response = self.client.patch(self.user_detail_url, updated_data)
         self.assertEquals(response.status_code, status.HTTP_200_OK)
 
     def test_change_password_old_password_wrong(self):
-        self.client.credentials(HTTP_AUTHORIZATION='Bearer ' + self.token['access'])
         updated_data = {
-            'old_password': self.data['password'] + "wrong",
+            'old_password': self.user_detail['password'] + "wrong",
             'new_password': 'newsecretpass'
         }
         response = self.client.patch(self.user_detail_url, updated_data)
@@ -203,9 +214,8 @@ class PatchUserDetailTest(TestCase):
         self.assertTrue(len(response.data.keys()) == 1 and 'old_password' in response.data.keys())
 
     def test_change_password_new_password_common(self):
-        self.client.credentials(HTTP_AUTHORIZATION='Bearer ' + self.token['access'])
         updated_data = {
-            'old_password': self.data['password'],
+            'old_password': self.user_detail['password'],
             'new_password': 'password'
         }
         response = self.client.patch(self.user_detail_url, updated_data)
@@ -216,7 +226,6 @@ class PatchUserDetailTest(TestCase):
         """
         User is not allowed to change password without providing `old_password` and `new_password`
         """
-        self.client.credentials(HTTP_AUTHORIZATION='Bearer ' + self.token['access'])
         updated_data = {
             'password': 'new_password'
         }
@@ -224,17 +233,15 @@ class PatchUserDetailTest(TestCase):
         self.assertEquals(response.status_code, status.HTTP_400_BAD_REQUEST)
 
     def test_change_password_another_user(self):
-        another_data = {
+        another_user_data = {
             'email': 'user2_cobersih@gmail.com',
             'password': 'secretpass',
             'name': 'user2_cobersih',
             'bio': 'user2 bio'
         }
-        register_response = self.client.post(self.REGISTER_URL, another_data)
-        another_user_detail = register_response.data
+        another_user_detail = self.user_manager.register_user(another_user_data)
         another_user_detail_url = reverse('user-detail', kwargs={'pk': another_user_detail['id']})
 
-        self.client.credentials(HTTP_AUTHORIZATION='Bearer ' + self.token['access'])
         updated_data = {
             'password': 'secretpass'
         }
@@ -242,8 +249,6 @@ class PatchUserDetailTest(TestCase):
         self.assertTrue(len(response.data.keys()) == 1 and 'detail' in response.data.keys())
 
     def test_change_name(self):
-        self.client.credentials(HTTP_AUTHORIZATION='Bearer ' + self.token['access'])
-
         updated_data = {
             'name': 'user_cobersih_new_name'
         }
@@ -255,8 +260,6 @@ class PatchUserDetailTest(TestCase):
         self.assertEquals(user_instance.name, updated_data['name'])
 
     def test_change_email(self):
-        self.client.credentials(HTTP_AUTHORIZATION='Bearer ' + self.token['access'])
-
         updated_data = {
             'email': 'user_cobersih_new_email@gmail.com'
         }
