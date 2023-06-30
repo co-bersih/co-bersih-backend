@@ -12,5 +12,6 @@ urlpatterns = [
     path('token/refresh/', TokenRefreshView.as_view(), name='token-refresh'),
     path('token/blacklist/', TokenBlacklistView.as_view(), name='token-blacklist'),
     path('user/<uuid:pk>', views.UserView.as_view(), name='user-detail'),
-    path('user/', views.CurrentUser.as_view(), name='current-user-detail')
+    path('user/<uuid:pk>/events/', views.UserEventView.as_view(), name='user-event-list'),
+    path('user/', views.CurrentUser.as_view(), name='current-user-detail'),
 ]

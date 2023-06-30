@@ -1,7 +1,7 @@
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
-from rest_framework.generics import CreateAPIView, RetrieveUpdateAPIView
+from rest_framework.generics import CreateAPIView, RetrieveUpdateAPIView, ListAPIView
 from rest_framework.parsers import FormParser, MultiPartParser
 from rest_framework import permissions
 from rest_framework.exceptions import ErrorDetail
@@ -9,6 +9,9 @@ from rest_framework.exceptions import ErrorDetail
 from .models import User
 from .serializers import UserSerializer, ChangePasswordSerializer
 from .permissions import IsCurrentUserOrReadOnly
+
+from apps.event.models import Event
+from apps.event.serializers import EventSerializer
 
 
 # Create your views here.
@@ -40,6 +43,14 @@ class UserView(RetrieveUpdateAPIView):
             }, status=status.HTTP_400_BAD_REQUEST)
 
         return super().partial_update(request, *args, **kwargs)
+
+
+class UserEventView(ListAPIView):
+    serializer_class = EventSerializer
+
+    def get_queryset(self):
+        pk = self.kwargs['pk']
+        return Event.objects.filter(joined_users=pk)
 
 
 class CurrentUser(APIView):

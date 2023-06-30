@@ -3,8 +3,8 @@ from django.urls import reverse
 from rest_framework import status
 from rest_framework.test import APIClient
 
-from apps.user.tests import UserManager
-from .models import Event
+from apps.user.test.utils import UserManager
+from apps.event.models import Event
 
 
 # Create your tests here.

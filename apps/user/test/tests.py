@@ -1,37 +1,16 @@
 from django.test import TestCase
+from django.urls import reverse
 from rest_framework.test import APIClient
 from rest_framework import status
-from django.urls import reverse
 
-from .models import User
+from apps.event.test.utils import EventManager
+from apps.user.models import User
 import uuid
+
+from .utils import UserManager
 
 
 # Create your tests here.
-class UserManager:
-    REGISTER_URL = reverse('user-register')
-    LOGIN_URL = reverse('user-login')
-
-    def __init__(self, client):
-        self.client = client
-
-    def login_user(self, register_data):
-        login_data = {
-            'email': register_data['email'],
-            'password': register_data['password']
-        }
-        response = self.client.post(self.LOGIN_URL, login_data)
-        token = response.data
-        self.client.credentials(HTTP_AUTHORIZATION='Bearer ' + token['access'])
-
-    def register_user(self, user_detail):
-        response = self.client.post(self.REGISTER_URL, user_detail)
-        response.data['password'] = user_detail['password']
-        return response.data
-
-    def logout_user(self):
-        self.client.credentials()
-
 
 class RegisterTest(TestCase):
     REGISTER_URL = reverse('user-register')
@@ -289,3 +268,49 @@ class CreateUserTest(TestCase):
     def test_string_representation(self):
         user = User.objects.create_user(**self.data)
         self.assertEquals(str(user), user.name)
+
+
+class UserEventTest(TestCase):
+    def setUp(self):
+        self.client = APIClient()
+        self.user_manager = UserManager(self.client)
+        self.event_manager = EventManager(self.client)
+
+        user_detail = self.user_manager.register_user({
+            'email': 'user_cobersih@gmail.com',
+            'password': 'secretpass',
+            'name': 'user_cobersih',
+            'bio': 'user bio'
+        })
+        self.user_manager.login_user(user_detail)
+
+        event_data = {
+            'name': 'event cobersih',
+            'description': 'deskripsi event cobersih',
+            'preparation': 'persiapan event cobersih',
+            'latitude': -6.121133006890128,
+            'longitude': 106.82900027912028,
+            'start_date': '2023-01-01',
+            'end_date': '2023-01-02'
+        }
+        self.total_event = 11
+
+        event_ids = self.event_manager.create_events(self.total_event, event_data)
+
+        self.user_manager.logout_user()
+
+        self.another_user_detail = self.user_manager.register_user({
+            'email': 'user_cobersih1@gmail.com',
+            'password': 'secretpass',
+            'name': 'user_cobersih1',
+            'bio': 'user1 bio'
+        })
+        self.user_manager.login_user(self.another_user_detail)
+
+        self.event_manager.join_events(event_ids)
+
+    def test_get_user_joined_events(self):
+        user_events_url = reverse('user-event-list', kwargs={'pk': self.another_user_detail['id']})
+        response = self.client.get(user_events_url)
+        self.assertEquals(response.status_code, status.HTTP_200_OK)
+        self.assertTrue(response.data['count'] == 11)
