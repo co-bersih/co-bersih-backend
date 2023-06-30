@@ -28,20 +28,7 @@ Pastikan bahwa `Python`, `pip`, dan `postgresql` sudah ter-*install* pada komput
     pip install -r requirements.txt
     ```
 
-5. Masukkan `.env` file pada folder project `cobersih`.
-
-    ```plaintext
-    SECRET_KEY=django-insecure-a31-u6xh(^wf53@lbop5cso#+vgp&5*!u129r!-b-hg%*oqw3g
-    DEBUG=True
-    DB_NAME=cobersih
-    DB_USER=postgres
-    DB_PASSWORD=postgres 
-    DB_HOST=localhost
-    DB_PORT=5432
-    CLOUDINARY_CLOUD_NAME=dwoicn6yn
-    CLOUDINARY_API_KEY=449652978967261
-    CLOUDINARY_API_SECRET=Km49iNGZcjLtTo54ah9cZ4SMJYo
-    ```
+5. Masukkan `.env` file pada folder project `cobersih` (see Discord).
 
     `DB_USER` dan `DB_PASSWORD` dapat Anda sesuaikan dengan `username` dan `password` akun postgres Anda. Selain itu, variabel yang berkaitan dengan cloudinary dapat disesauikan pada saat produksi.
 
