@@ -2,11 +2,12 @@ import uuid
 from django.db import models
 from django.conf import settings
 from apps.user.models import User
+from apps.utils.models import BaseModel
 from cloudinary.models import CloudinaryField
 
 
 # Create your models here.
-class Event(models.Model):
+class Event(BaseModel):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     host = models.ForeignKey(User, on_delete=models.CASCADE, related_name='events_host')
     name = models.CharField(max_length=100)
@@ -21,13 +22,12 @@ class Event(models.Model):
     supports = models.ManyToManyField(User, related_name='events_support')
 
     class Meta:
+        unique_together = ['id', 'is_deleted']
         ordering = ['start_date']
 
     @property
     def image_url(self):
-        if self.image:
-            return f'https://res.cloudinary.com/{settings.CLOUDINARY_CLOUD_NAME}/{self.image}'
-        return ''
+        return f'https://res.cloudinary.com/{settings.CLOUDINARY_CLOUD_NAME}/{self.image}' if self.image else ''
 
     @property
     def total_participant(self):

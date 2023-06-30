@@ -51,6 +51,4 @@ class User(AbstractUser):
 
     @property
     def profile_image_url(self):
-        if self.profile_image:
-            return f'https://res.cloudinary.com/{settings.CLOUDINARY_CLOUD_NAME}/{self.profile_image}'
-        return ''
+        return f'https://res.cloudinary.com/{settings.CLOUDINARY_CLOUD_NAME}/{self.profile_image}' if self.profile_image else ''

@@ -1,8 +1,9 @@
 from django.test import TestCase
 from django.urls import reverse
-
-from rest_framework.test import APIClient
 from rest_framework import status
+from rest_framework.test import APIClient
+
+from .models import Event
 
 
 # Create your tests here.
@@ -119,3 +120,9 @@ class CRUDEventTest(TestCase):
         patch_response = self.client.patch(event_detail_url, updated_data)
         self.assertEquals(patch_response.status_code, status.HTTP_400_BAD_REQUEST)
         self.assertTrue('invalid_date' in patch_response.data.keys())
+
+    def test_delete_event(self):
+        event_detail_url = self.create_event()
+        delete_response = self.client.delete(event_detail_url)
+        self.assertEquals(delete_response.status_code, status.HTTP_204_NO_CONTENT)
+        self.assertTrue(len(Event.objects.all()) == 0)
