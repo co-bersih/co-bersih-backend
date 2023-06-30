@@ -1,4 +1,5 @@
 from rest_framework import serializers
+from rest_framework.exceptions import ErrorDetail
 from .models import Event
 from apps.user.serializers import UserSerializer
 
@@ -18,8 +19,9 @@ class EventSerializer(serializers.ModelSerializer):
         """
         Check that start_date is before end_date.
         """
-        if data['start_date'] > data['end_date']:
-            raise serializers.ValidationError("end_date must occur after start_date")
+        if data.get('start_date', self.instance.start_date if self.instance else None) > \
+                data.get('end_date', self.instance.end_date if self.instance else None):
+            raise serializers.ValidationError({'invalid_date': ErrorDetail('end_date must occur after start_date')})
         return data
 
     def to_representation(self, instance):

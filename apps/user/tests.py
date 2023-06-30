@@ -1,5 +1,4 @@
 from django.test import TestCase
-from rest_framework.exceptions import ErrorDetail
 from rest_framework.test import APIClient
 from rest_framework import status
 from django.urls import reverse
@@ -30,31 +29,31 @@ class RegisterTest(TestCase):
         User.objects.create(**self.data)
         response = self.client.post(self.REGISTER_URL, self.data)
         self.assertEquals(response.status_code, status.HTTP_400_BAD_REQUEST)
-        self.assertIsInstance(response.data['email'][0], ErrorDetail)
+        self.assertTrue(len(response.data.keys()) == 1 and 'email' in response.data.keys())
 
     def test_email_invalid(self):
         self.data['email'] = 'invalid_email'
         response = self.client.post(self.REGISTER_URL, self.data)
         self.assertEquals(response.status_code, status.HTTP_400_BAD_REQUEST)
-        self.assertIsInstance(response.data['email'][0], ErrorDetail)
+        self.assertTrue(len(response.data.keys()) == 1 and 'email' in response.data.keys())
 
     def test_password_empty(self):
         self.data['password'] = ''
         response = self.client.post(self.REGISTER_URL, self.data)
         self.assertEquals(response.status_code, status.HTTP_400_BAD_REQUEST)
-        self.assertIsInstance(response.data['password'][0], ErrorDetail)
+        self.assertTrue(len(response.data.keys()) == 1 and 'password' in response.data.keys())
 
     def test_password_common(self):
         self.data['password'] = 'password'
         response = self.client.post(self.REGISTER_URL, self.data)
         self.assertEquals(response.status_code, status.HTTP_400_BAD_REQUEST)
-        self.assertIsInstance(response.data['password'][0], ErrorDetail)
+        self.assertTrue(len(response.data.keys()) == 1 and 'password' in response.data.keys())
 
     def test_name_empty(self):
         self.data['name'] = ''
         response = self.client.post(self.REGISTER_URL, self.data)
         self.assertEquals(response.status_code, status.HTTP_400_BAD_REQUEST)
-        self.assertIsInstance(response.data['name'][0], ErrorDetail)
+        self.assertTrue(len(response.data.keys()) == 1 and 'name' in response.data.keys())
 
 
 class LoginTest(TestCase):
@@ -88,7 +87,7 @@ class LoginTest(TestCase):
         }
         response = self.client.post(self.LOGIN_URL, login_data)
         self.assertEquals(response.status_code, status.HTTP_401_UNAUTHORIZED)
-        self.assertIsInstance(response.data['detail'], ErrorDetail)
+        self.assertTrue(len(response.data.keys()) == 1 and 'detail' in response.data.keys())
 
     def test_email_invalid(self):
         login_data = {
@@ -97,7 +96,7 @@ class LoginTest(TestCase):
         }
         response = self.client.post(self.LOGIN_URL, login_data)
         self.assertEquals(response.status_code, status.HTTP_401_UNAUTHORIZED)
-        self.assertIsInstance(response.data['detail'], ErrorDetail)
+        self.assertTrue(len(response.data.keys()) == 1 and 'detail' in response.data.keys())
 
 
 class CurrentUserDetailTest(TestCase):
@@ -132,7 +131,7 @@ class CurrentUserDetailTest(TestCase):
     def test_current_user_detail_without_credentials(self):
         response = self.client.get(self.CURRENT_USER_DETAIL_URL)
         self.assertEquals(response.status_code, status.HTTP_401_UNAUTHORIZED)
-        self.assertIsInstance(response.data['detail'], ErrorDetail)
+        self.assertTrue(len(response.data.keys()) == 1 and 'detail' in response.data.keys())
 
 
 class UserDetailTest(TestCase):
@@ -201,7 +200,7 @@ class PatchUserDetailTest(TestCase):
         }
         response = self.client.patch(self.user_detail_url, updated_data)
         self.assertEquals(response.status_code, status.HTTP_400_BAD_REQUEST)
-        self.assertIsInstance(response.data['old_password'][0], ErrorDetail)
+        self.assertTrue(len(response.data.keys()) == 1 and 'old_password' in response.data.keys())
 
     def test_change_password_new_password_common(self):
         self.client.credentials(HTTP_AUTHORIZATION='Bearer ' + self.token['access'])
@@ -211,7 +210,7 @@ class PatchUserDetailTest(TestCase):
         }
         response = self.client.patch(self.user_detail_url, updated_data)
         self.assertEquals(response.status_code, status.HTTP_400_BAD_REQUEST)
-        self.assertIsInstance(response.data['new_password'][0], ErrorDetail)
+        self.assertTrue(len(response.data.keys()) == 1 and 'new_password' in response.data.keys())
 
     def test_change_password_invalid(self):
         """
@@ -240,7 +239,7 @@ class PatchUserDetailTest(TestCase):
             'password': 'secretpass'
         }
         response = self.client.patch(another_user_detail_url, updated_data)
-        self.assertIsInstance(response.data['detail'], ErrorDetail)
+        self.assertTrue(len(response.data.keys()) == 1 and 'detail' in response.data.keys())
 
     def test_change_name(self):
         self.client.credentials(HTTP_AUTHORIZATION='Bearer ' + self.token['access'])
@@ -264,7 +263,7 @@ class PatchUserDetailTest(TestCase):
 
         response = self.client.patch(self.user_detail_url, updated_data)
         self.assertEquals(response.status_code, status.HTTP_400_BAD_REQUEST)
-        self.assertIsInstance(response.data['email'][0], ErrorDetail)
+        self.assertTrue(len(response.data.keys()) == 1 and 'email' in response.data.keys())
 
 
 class CreateUserTest(TestCase):

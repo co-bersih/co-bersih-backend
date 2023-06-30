@@ -21,6 +21,7 @@ class EventViewSet(viewsets.ModelViewSet):
     serializer_class = EventSerializer
     permission_classes = [permissions.IsAuthenticatedOrReadOnly,
                           IsHostOrReadOnly]
+    http_method_names = ['get', 'head', 'post', 'patch', 'delete']
 
     def perform_create(self, serializer):
         event = serializer.save(host=self.request.user)
