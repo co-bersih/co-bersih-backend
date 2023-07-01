@@ -53,6 +53,14 @@ class UserEventView(ListAPIView):
         return Event.objects.filter(joined_users=pk)
 
 
+class UserEventStaffView(ListAPIView):
+    serializer_class = EventSerializer
+
+    def get_queryset(self):
+        pk = self.kwargs['pk']
+        return Event.objects.filter(staffs=pk)
+
+
 class CurrentUser(APIView):
     permission_classes = [permissions.IsAuthenticated]
 

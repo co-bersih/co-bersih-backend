@@ -311,4 +311,38 @@ class UserEventTest(TestCase):
         user_events_url = reverse('user-event-list', kwargs={'pk': self.another_user_detail['id']})
         response = self.client.get(user_events_url)
         self.assertEquals(response.status_code, status.HTTP_200_OK)
+        self.assertTrue(response.data['count'] == self.total_event)
+
+
+class UserEventStaffTest(TestCase):
+    def setUp(self):
+        self.client = APIClient()
+        self.user_manager = UserManager(self.client)
+        self.event_manager = EventManager(self.client)
+
+        self.user_detail = self.user_manager.register_user({
+            'email': 'user_cobersih@gmail.com',
+            'password': 'secretpass',
+            'name': 'user_cobersih',
+            'bio': 'user bio'
+        })
+        self.user_manager.login_user(self.user_detail)
+
+        event_data = {
+            'name': 'event cobersih',
+            'description': 'deskripsi event cobersih',
+            'preparation': 'persiapan event cobersih',
+            'latitude': -6.121133006890128,
+            'longitude': 106.82900027912028,
+            'start_date': '2023-01-01',
+            'end_date': '2023-01-02'
+        }
+        self.total_event = 11
+
+        event_ids = self.event_manager.create_events(self.total_event, event_data)
+
+    def test_get_event_with_user_as_staff(self):
+        user_events_staff_url = reverse('user-event-staff-list', kwargs={'pk': self.user_detail['id']})
+        response = self.client.get(user_events_staff_url)
+        self.assertEquals(response.status_code, status.HTTP_200_OK)
         self.assertTrue(response.data['count'] == 11)
