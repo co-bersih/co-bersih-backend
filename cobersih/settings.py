@@ -36,6 +36,16 @@ DEBUG = env('DEBUG')
 CSRF_ALLOWED_ORIGINS = ['https://co-bersih-backend.fly.dev']
 CSRF_TRUSTED_ORIGINS = ['https://co-bersih-backend.fly.dev']
 
+CORS_ALLOWED_ORIGINS = [
+    'http://localhost:3000',
+    'https://co-bersih-git-development-co-bersih.vercel.app',
+    'https://co-bersih.vercel.app',
+]
+
+CORS_ALLOW_ALL_ORIGINS = True
+if env('ENVIRONMENT').lower() == 'prod':
+    CORS_ALLOW_ALL_ORIGINS = False
+
 CORS_ALLOW_HEADERS = [
     "accept",
     "accept-encoding",
@@ -61,6 +71,7 @@ ALLOWED_HOSTS = [
 
 INSTALLED_APPS = [
     'django.contrib.admin',
+    'corsheaders',
     'django.contrib.auth',
     'django.contrib.contenttypes',
     'django.contrib.sessions',
@@ -79,6 +90,7 @@ MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
+    'corsheaders.middleware.CorsMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
