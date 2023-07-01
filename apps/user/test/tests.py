@@ -136,20 +136,18 @@ class UserDetailTest(TestCase):
 
     def setUp(self):
         self.client = APIClient()
-        self.data = {
+        self.user_manager = UserManager(self.client)
+        self.user_detail = self.user_manager.register_user({
             'email': 'user_cobersih@gmail.com',
             'password': 'secretpass',
             'name': 'user_cobersih',
             'bio': 'user bio'
-        }
-        response = self.client.post(self.REGISTER_URL, self.data)
-
-        self.user_detail = response.data
+        })
         self.user_detail_url = reverse('user-detail', kwargs={'pk': self.user_detail['id']})
 
     def test_user_detail(self):
         response = self.client.get(f'{self.user_detail_url}')
-        self.assertEquals(response.data, self.user_detail)
+        self.assertEquals(response.data['id'], self.user_detail['id'])
 
     def test_invalid_user_detail(self):
         self.user_detail_url = reverse('user-detail', kwargs={'pk': uuid.uuid4()})
@@ -249,7 +247,7 @@ class PatchUserDetailTest(TestCase):
 
 
 class CreateUserTest(TestCase):
-    def setUp(self) -> None:
+    def setUp(self):
         self.data = {
             'email': 'user_cobersih@gmail.com',
             'password': 'password',

@@ -2,6 +2,7 @@ from rest_framework import serializers
 from rest_framework.exceptions import ErrorDetail
 from .models import Event
 from apps.user.serializers import UserSerializer
+from apps.user.models import User
 
 
 class EventSerializer(serializers.ModelSerializer):
@@ -38,3 +39,14 @@ class EventDetailSerializer(EventSerializer):
     class Meta(EventSerializer.Meta):
         model = Event
         fields = EventSerializer.Meta.fields + ['staffs', 'supports']
+
+
+class AddStaffSerializer(serializers.Serializer):
+    staff_id = serializers.UUIDField()
+
+    def validate_staff_id(self, value):
+        try:
+            User.objects.get(pk=value)
+        except User.DoesNotExist:
+            raise serializers.ValidationError(ErrorDetail('staff_id not found'))
+        return value

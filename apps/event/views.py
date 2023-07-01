@@ -4,9 +4,10 @@ from rest_framework import status
 from rest_framework import viewsets, permissions
 
 from .models import Event
-from .serializers import EventSerializer, EventDetailSerializer
+from .serializers import EventSerializer, EventDetailSerializer, AddStaffSerializer
 from .permissions import IsHostOrReadOnly
 
+from apps.user.models import User
 
 # Create your views here.
 
@@ -47,3 +48,18 @@ class EventViewSet(viewsets.ModelViewSet):
 
         user.joined_events.add(event)
         return Response({'detail': 'user successfully joined'}, status=status.HTTP_200_OK)
+
+    @action(detail=True, methods=['patch'], url_path='staffs', url_name='staffs')
+    def add_staff(self, request, pk=None):
+        event = self.get_object()
+        staff_id = request.data.get('staff_id', '')
+
+        serializer = AddStaffSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        staff = User.objects.get(pk=staff_id)
+
+        if staff in event.joined_users.all():
+            return Response({'detail': 'you already joined this event as user'}, status=status.HTTP_400_BAD_REQUEST)
+
+        event.staffs.add(staff)
+        return Response({'detail': 'staff successfully updated'}, status=status.HTTP_200_OK)
