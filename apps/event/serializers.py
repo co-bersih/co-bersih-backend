@@ -41,7 +41,7 @@ class EventDetailSerializer(EventSerializer):
         fields = EventSerializer.Meta.fields + ['staffs', 'supports']
 
 
-class AddStaffSerializer(serializers.Serializer):
+class StaffSerializer(serializers.Serializer):
     staff_id = serializers.UUIDField()
 
     def validate_staff_id(self, value):

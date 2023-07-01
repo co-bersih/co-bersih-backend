@@ -4,10 +4,11 @@ from rest_framework import status
 from rest_framework import viewsets, permissions
 
 from .models import Event
-from .serializers import EventSerializer, EventDetailSerializer, AddStaffSerializer
+from .serializers import EventSerializer, EventDetailSerializer, StaffSerializer
 from .permissions import IsHostOrReadOnly
 
 from apps.user.models import User
+
 
 # Create your views here.
 
@@ -49,12 +50,20 @@ class EventViewSet(viewsets.ModelViewSet):
         user.joined_events.add(event)
         return Response({'detail': 'user successfully joined'}, status=status.HTTP_200_OK)
 
-    @action(detail=True, methods=['patch'], url_path='staffs', url_name='staffs')
+    @action(detail=True, methods=['post'], permission_classes=[permissions.IsAuthenticated],
+            url_path='leave', url_name='leave')
+    def leave_event(self, request, pk=None):
+        event = self.get_object()
+        user = self.request.user
+        user.joined_events.remove(event)
+        return Response({'detail': 'user successfully left'}, status=status.HTTP_200_OK)
+
+    @action(detail=True, methods=['post'], url_path='staffs', url_name='staff-list')
     def add_staff(self, request, pk=None):
         event = self.get_object()
         staff_id = request.data.get('staff_id', '')
 
-        serializer = AddStaffSerializer(data=request.data)
+        serializer = StaffSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         staff = User.objects.get(pk=staff_id)
 
@@ -63,3 +72,17 @@ class EventViewSet(viewsets.ModelViewSet):
 
         event.staffs.add(staff)
         return Response({'detail': 'staff successfully updated'}, status=status.HTTP_200_OK)
+
+    @action(detail=True, methods=['delete'], url_path='staffs/(?P<staff_pk>[^/.]+)', url_name='staff-detail')
+    def delete_staff(self, request, pk=None, staff_pk=None):
+        event = self.get_object()
+
+        serializer = StaffSerializer(data={'staff_id': staff_pk})
+        serializer.is_valid(raise_exception=True)
+        staff = User.objects.get(pk=staff_pk)
+
+        if event.host == staff:
+            return Response({'detail': 'you are the host of this event'}, status=status.HTTP_400_BAD_REQUEST)
+
+        event.staffs.remove(staff)
+        return Response({'detail': 'staff successfully removed'}, status=status.HTTP_200_OK)

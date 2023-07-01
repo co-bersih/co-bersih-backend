@@ -5,6 +5,7 @@ from rest_framework.test import APIClient
 
 from apps.user.test.utils import UserManager
 from apps.event.models import Event
+from apps.user.models import User
 
 
 # Create your tests here.
@@ -27,7 +28,7 @@ class CRUDEventTest(TestCase):
             'name': 'user_cobersih2',
             'bio': 'user2 bio'
         })
-        
+
         # Login as user_1 and create event
         self.user_manager.login_user(self.user1)
         self.event_data = {
@@ -129,6 +130,15 @@ class CRUDEventTest(TestCase):
 
         self.assertEquals(response.status_code, status.HTTP_200_OK)
 
+    def test_leave_event(self):
+        self.user_manager.login_user(self.user2)
+        join_event_url = reverse('event-join', kwargs={'pk': self.event_id})
+        self.client.post(join_event_url)
+
+        leave_event_url = reverse('event-leave', kwargs={'pk': self.event_id})
+        response = self.client.post(leave_event_url)
+        self.assertEquals(response.status_code, status.HTTP_200_OK)
+
     def test_join_event_as_host(self):
         join_event_url = reverse('event-join', kwargs={'pk': self.event_id})
         response = self.client.post(join_event_url)
@@ -137,8 +147,8 @@ class CRUDEventTest(TestCase):
 
     def test_join_event_as_staff(self):
         # Update user2 as user1 event staff
-        update_staff_event_url = reverse('event-staffs', kwargs={'pk': self.event_id})
-        self.client.patch(update_staff_event_url, {'staff_id': self.user2['id']})
+        update_staff_event_url = reverse('event-staff-list', kwargs={'pk': self.event_id})
+        self.client.post(update_staff_event_url, {'staff_id': self.user2['id']})
 
         # Login as user2
         self.user_manager.login_user(self.user2)
@@ -149,9 +159,22 @@ class CRUDEventTest(TestCase):
 
     def test_update_event_staffs(self):
         # Update event with new staff (another_user_detail)
-        update_staff_event_url = reverse('event-staffs', kwargs={'pk': self.event_id})
-        response = self.client.patch(update_staff_event_url, {'staff_id': self.user2['id']})
+        update_staff_event_url = reverse('event-staff-list', kwargs={'pk': self.event_id})
+        response = self.client.post(update_staff_event_url, {'staff_id': self.user2['id']})
         self.assertEquals(response.status_code, status.HTTP_200_OK)
+        self.assertTrue(len(User.objects.get(pk=self.user2['id']).events_staff.all()) == 1)
+
+    def test_remove_event_staffs(self):
+        # Update event with new staff (another_user_detail)
+        update_staff_event_url = reverse('event-staff-list', kwargs={'pk': self.event_id})
+        self.client.post(update_staff_event_url, {'staff_id': self.user2['id']})
+
+        # Remove new staff
+        delete_staff_event_url = reverse('event-staff-detail',
+                                         kwargs={'pk': self.event_id, 'staff_pk': self.user2['id']})
+        response = self.client.delete(delete_staff_event_url)
+        self.assertEquals(response.status_code, status.HTTP_200_OK)
+        self.assertTrue(len(User.objects.get(pk=self.user2['id']).events_staff.all()) == 0)
 
     def test_update_event_staffs_as_joined_user(self):
         # Join event as another user
@@ -161,6 +184,6 @@ class CRUDEventTest(TestCase):
 
         # Login as host
         self.user_manager.login_user(self.user1)
-        update_staff_event_url = reverse('event-staffs', kwargs={'pk': self.event_id})
-        response = self.client.patch(update_staff_event_url, {'staff_id': self.user2['id']})
+        update_staff_event_url = reverse('event-staff-list', kwargs={'pk': self.event_id})
+        response = self.client.post(update_staff_event_url, {'staff_id': self.user2['id']})
         self.assertEquals(response.status_code, status.HTTP_400_BAD_REQUEST)

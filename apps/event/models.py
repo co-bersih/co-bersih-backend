@@ -18,7 +18,7 @@ class Event(BaseModel):
     longitude = models.FloatField()
     start_date = models.DateTimeField()
     end_date = models.DateTimeField()
-    staffs = models.ManyToManyField(User, related_name='events_panitia')
+    staffs = models.ManyToManyField(User, related_name='events_staff')
     supports = models.ManyToManyField(User, related_name='events_support')
 
     class Meta:
