@@ -71,7 +71,7 @@ class CRUDEventTest(TestCase):
         self.event_data['start_date'] = '2023-01-03'
         response = self.client.post(self.EVENT_LIST_URL, self.event_data)
         self.assertEquals(response.status_code, status.HTTP_400_BAD_REQUEST)
-        self.assertTrue('invalid_date' in response.data.keys())
+        self.assertTrue(response.data['errors'][0]['code'] == 'invalid_date')
 
     def test_retrieve_event(self):
         create_response = self.client.post(self.EVENT_LIST_URL, self.event_data)
@@ -104,7 +104,7 @@ class CRUDEventTest(TestCase):
 
         response = self.client.patch(event_detail_url, updated_data)
         self.assertEquals(response.status_code, status.HTTP_400_BAD_REQUEST)
-        self.assertTrue('invalid_date' in response.data.keys())
+        self.assertTrue(response.data['errors'][0]['code'] == 'invalid_date')
 
     def test_patch_event_invalid_end_date(self):
         event_detail_url = reverse('event-detail', kwargs={'pk': self.event_id})
@@ -115,7 +115,7 @@ class CRUDEventTest(TestCase):
 
         response = self.client.patch(event_detail_url, updated_data)
         self.assertEquals(response.status_code, status.HTTP_400_BAD_REQUEST)
-        self.assertTrue('invalid_date' in response.data.keys())
+        self.assertTrue(response.data['errors'][0]['code'] == 'invalid_date')
 
     def test_delete_event(self):
         event_detail_url = reverse('event-detail', kwargs={'pk': self.event_id})
@@ -164,6 +164,15 @@ class CRUDEventTest(TestCase):
         self.assertEquals(response.status_code, status.HTTP_200_OK)
         self.assertTrue(len(User.objects.get(pk=self.user2['id']).events_staff.all()) == 1)
 
+    def test_update_event_staffs_with_invalid_user(self):
+        self.user_manager.login_user(self.user2)
+
+        # Update event as another user
+        update_staff_event_url = reverse('event-staff-list', kwargs={'pk': self.event_id})
+        response = self.client.post(update_staff_event_url, {'staff_id': self.user2['id']})
+        self.assertEquals(response.status_code, status.HTTP_403_FORBIDDEN)
+        self.assertTrue(response.data['errors'][0]['code'] == 'permission_denied')
+
     def test_remove_event_staffs(self):
         # Update event with new staff (another_user_detail)
         update_staff_event_url = reverse('event-staff-list', kwargs={'pk': self.event_id})
@@ -175,6 +184,21 @@ class CRUDEventTest(TestCase):
         response = self.client.delete(delete_staff_event_url)
         self.assertEquals(response.status_code, status.HTTP_200_OK)
         self.assertTrue(len(User.objects.get(pk=self.user2['id']).events_staff.all()) == 0)
+
+    def test_remove_event_staffs_with_invalid_user(self):
+        # Update event with new staff (another_user_detail)
+        update_staff_event_url = reverse('event-staff-list', kwargs={'pk': self.event_id})
+        self.client.post(update_staff_event_url, {'staff_id': self.user2['id']})
+
+        # Login as user2
+        self.user_manager.login_user(self.user2)
+
+        # Remove new staff
+        delete_staff_event_url = reverse('event-staff-detail',
+                                         kwargs={'pk': self.event_id, 'staff_pk': self.user2['id']})
+        response = self.client.delete(delete_staff_event_url)
+        self.assertEquals(response.status_code, status.HTTP_403_FORBIDDEN)
+        self.assertTrue(response.data['errors'][0]['code'] == 'permission_denied')
 
     def test_update_event_staffs_as_joined_user(self):
         # Join event as another user

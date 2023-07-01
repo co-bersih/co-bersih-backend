@@ -1,5 +1,4 @@
 from rest_framework import serializers
-from rest_framework.exceptions import ErrorDetail
 from .models import Event
 from apps.user.serializers import UserSerializer
 from apps.user.models import User
@@ -22,7 +21,7 @@ class EventSerializer(serializers.ModelSerializer):
         """
         if data.get('start_date', self.instance.start_date if self.instance else None) > \
                 data.get('end_date', self.instance.end_date if self.instance else None):
-            raise serializers.ValidationError({'invalid_date': ErrorDetail('end_date must occur after start_date')})
+            raise serializers.ValidationError('end_date must occur after start_date', code='invalid_date')
         return data
 
     def to_representation(self, instance):
@@ -48,5 +47,5 @@ class StaffSerializer(serializers.Serializer):
         try:
             User.objects.get(pk=value)
         except User.DoesNotExist:
-            raise serializers.ValidationError(ErrorDetail('staff_id not found'))
+            raise serializers.ValidationError({'staff_id': 'staff_id not found'}, code='invalid_id')
         return value

@@ -1,4 +1,5 @@
 from rest_framework.decorators import api_view, action
+from rest_framework.exceptions import ValidationError
 from rest_framework.response import Response
 from rest_framework import status
 from rest_framework import viewsets, permissions
@@ -43,9 +44,9 @@ class EventViewSet(viewsets.ModelViewSet):
         user = self.request.user
 
         if event.host == user:
-            return Response({'detail': 'you are the host of this event'}, status=status.HTTP_400_BAD_REQUEST)
+            raise ValidationError({'id': 'you are the host of this event'}, code='user_is_event_host')
         elif user in event.staffs.all():
-            return Response({'detail': 'you are the staff of this event'}, status=status.HTTP_400_BAD_REQUEST)
+            raise ValidationError({'id': 'you are the staff of this event'}, code='user_is_event_staff')
 
         user.joined_events.add(event)
         return Response({'detail': 'user successfully joined'}, status=status.HTTP_200_OK)
@@ -68,7 +69,7 @@ class EventViewSet(viewsets.ModelViewSet):
         staff = User.objects.get(pk=staff_id)
 
         if staff in event.joined_users.all():
-            return Response({'detail': 'you already joined this event as user'}, status=status.HTTP_400_BAD_REQUEST)
+            raise ValidationError({'id': 'you already joined this event as user'}, code='user_already_joined_event')
 
         event.staffs.add(staff)
         return Response({'detail': 'staff successfully updated'}, status=status.HTTP_200_OK)
@@ -82,7 +83,7 @@ class EventViewSet(viewsets.ModelViewSet):
         staff = User.objects.get(pk=staff_pk)
 
         if event.host == staff:
-            return Response({'detail': 'you are the host of this event'}, status=status.HTTP_400_BAD_REQUEST)
+            raise ValidationError({'id': 'you are the host of this event'}, code='user_is_event_host')
 
         event.staffs.remove(staff)
         return Response({'detail': 'staff successfully removed'}, status=status.HTTP_200_OK)
