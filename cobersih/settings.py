@@ -53,7 +53,8 @@ CORS_ALLOW_HEADERS = [
 
 ALLOWED_HOSTS = [
     'co-bersih-backend.fly.dev',
-    '127.0.0.1'
+    '127.0.0.1',
+    'localhost',
 ]
 
 # Application definition
