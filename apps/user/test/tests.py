@@ -316,6 +316,68 @@ class UserEventTest(TestCase):
         self.assertTrue(response.data['count'] == self.total_event)
 
 
+class UserEventDetailTest(TestCase):
+    def setUp(self):
+        self.client = APIClient()
+        self.user_manager = UserManager(self.client)
+        self.event_manager = EventManager(self.client)
+
+        # Register user1 and user2
+        self.user1 = self.user_manager.register_user({
+            'email': 'user_cobersih@gmail.com',
+            'password': 'secretpass',
+            'name': 'user_cobersih',
+            'bio': 'user bio'
+        })
+
+        self.user2 = self.user_manager.register_user({
+            'email': 'user_cobersih2@gmail.com',
+            'password': 'secretpass',
+            'name': 'user_cobersih2',
+            'bio': 'user2 bio'
+        })
+
+        # Events data
+        self.event_data = {
+            'name': 'event cobersih',
+            'description': 'deskripsi event cobersih',
+            'preparation': 'persiapan event cobersih',
+            'latitude': -6.121133006890128,
+            'longitude': 106.82900027912028,
+            'start_date': '2023-01-01',
+            'end_date': '2023-01-02'
+        }
+
+        # Create event with user1 as host
+        self.user_manager.login_user(self.user1)
+        self.event1_id = self.event_manager.create_event(self.event_data)
+        self.event_manager.verify_event(self.event1_id)
+
+    def test_check_user_joined_event_is_true(self):
+        self.user_manager.login_user(self.user2)
+        self.event_manager.join_event(self.event1_id)
+
+        check_event_url = reverse('user-event-detail', kwargs={'pk': self.user2['id'], 'event_pk': self.event1_id})
+        response = self.client.head(check_event_url)
+        self.assertEquals(response.status_code, status.HTTP_200_OK)
+
+    def test_check_user_joined_event_is_false(self):
+        self.user_manager.login_user(self.user2)
+
+        check_event_url = reverse('user-event-detail', kwargs={'pk': self.user2['id'], 'event_pk': self.event1_id})
+        response = self.client.head(check_event_url)
+        self.assertEquals(response.status_code, status.HTTP_404_NOT_FOUND)
+
+    def test_get_user_joined_event(self):
+        self.user_manager.login_user(self.user2)
+        self.event_manager.join_event(self.event1_id)
+
+        check_event_url = reverse('user-event-detail', kwargs={'pk': self.user2['id'], 'event_pk': self.event1_id})
+        response = self.client.get(check_event_url)
+        self.assertEquals(response.status_code, status.HTTP_200_OK)
+        self.assertEquals(response.data['id'], self.event1_id)
+
+
 class UserEventStaffTest(TestCase):
     def setUp(self):
         self.client = APIClient()
@@ -340,8 +402,7 @@ class UserEventStaffTest(TestCase):
             'end_date': '2023-01-02'
         }
         self.total_event = 11
-
-        event_ids = self.event_manager.create_events(self.total_event, event_data)
+        self.event_manager.create_events(self.total_event, event_data)
 
     def test_get_event_with_user_as_staff(self):
         user_events_staff_url = reverse('user-event-staff-list', kwargs={'pk': self.user_detail['id']})

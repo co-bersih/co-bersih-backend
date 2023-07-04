@@ -47,5 +47,5 @@ class StaffSerializer(serializers.Serializer):
         try:
             User.objects.get(pk=value)
         except User.DoesNotExist:
-            raise serializers.ValidationError({'staff_id': 'staff_id not found'}, code='invalid_id')
+            raise serializers.ValidationError('staff_id not found', code='invalid_id')
         return value

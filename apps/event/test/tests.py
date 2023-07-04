@@ -248,6 +248,12 @@ class EventActionTest(TestCase):
         self.assertEquals(response.status_code, status.HTTP_200_OK)
         self.assertTrue(len(User.objects.get(pk=self.user2['id']).events_staff.all()) == 1)
 
+    def test_update_event_staffs_with_invalid_id(self):
+        update_staff_event_url = reverse('event-staff-list', kwargs={'pk': self.event_id})
+        response = self.client.post(update_staff_event_url, {'staff_id': '00000000-0000-0000-0000-000000000000'})
+        self.assertEquals(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertTrue(response.data['errors'][0]['attr'] == 'staff_id')
+
     def test_update_event_staffs_with_invalid_user(self):
         self.user_manager.login_user(self.user2)
 
