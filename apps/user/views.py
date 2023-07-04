@@ -1,17 +1,15 @@
-from rest_framework.views import APIView
-from rest_framework.response import Response
-from rest_framework import status
-from rest_framework.generics import CreateAPIView, RetrieveUpdateAPIView, ListAPIView
-from rest_framework.parsers import FormParser, MultiPartParser
-from rest_framework import permissions
-from rest_framework.exceptions import ValidationError
-
-from .models import User
-from .serializers import UserSerializer, ChangePasswordSerializer
-from .permissions import IsCurrentUserOrReadOnly
-
 from apps.event.models import Event
 from apps.event.serializers import EventSerializer
+from rest_framework import permissions
+from rest_framework import status
+from rest_framework.exceptions import ValidationError
+from rest_framework.generics import CreateAPIView, RetrieveUpdateAPIView, ListAPIView
+from rest_framework.parsers import FormParser, MultiPartParser
+from rest_framework.response import Response
+from rest_framework.views import APIView
+from .models import User
+from .permissions import IsCurrentUserOrReadOnly
+from .serializers import UserSerializer, ChangePasswordSerializer
 
 
 # Create your views here.

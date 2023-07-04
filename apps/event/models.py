@@ -1,9 +1,10 @@
 import uuid
-from django.db import models
-from django.conf import settings
+
 from apps.user.models import User
 from apps.utils.models import BaseModel
 from cloudinary.models import CloudinaryField
+from django.conf import settings
+from django.db import models
 
 
 # Create your models here.
@@ -20,6 +21,7 @@ class Event(BaseModel):
     end_date = models.DateTimeField()
     staffs = models.ManyToManyField(User, related_name='events_staff')
     supports = models.ManyToManyField(User, related_name='events_support')
+    is_verified = models.BooleanField(default=False)
 
     class Meta:
         unique_together = ['id', 'is_deleted']
