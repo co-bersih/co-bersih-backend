@@ -20,6 +20,7 @@ class Event(BaseModel):
     end_date = models.DateTimeField()
     staffs = models.ManyToManyField(User, related_name='events_staff')
     supports = models.ManyToManyField(User, related_name='events_support')
+    is_verified = models.BooleanField(default=False)
 
     class Meta:
         unique_together = ['id', 'is_deleted']

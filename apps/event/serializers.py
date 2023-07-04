@@ -13,7 +13,7 @@ class EventSerializer(serializers.ModelSerializer):
     class Meta:
         model = Event
         fields = ['id', 'host', 'name', 'total_participant', 'description', 'preparation', 'image', 'image_url',
-                  'latitude', 'longitude', 'start_date', 'end_date']
+                  'latitude', 'longitude', 'start_date', 'end_date', 'is_verified']
 
     def validate(self, data):
         """

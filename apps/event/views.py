@@ -40,6 +40,16 @@ class EventViewSet(viewsets.ModelViewSet):
             return EventDetailSerializer
         return EventSerializer
 
+    @action(detail=True, methods=['post'], permission_classes=[permissions.IsAdminUser],
+            url_path='verify', url_name='verify')
+    def verify_event(self, request, pk=None):
+        event = self.get_object()
+        event.is_verified = True
+        event.save()
+
+        serializer = self.get_serializer(event)
+        return Response(serializer.data, status=status.HTTP_200_OK)
+
     @action(detail=True, methods=['post'], permission_classes=[permissions.IsAuthenticated],
             url_path='join', url_name='join')
     def join_event(self, request, pk=None):

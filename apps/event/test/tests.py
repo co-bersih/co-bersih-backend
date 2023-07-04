@@ -1,11 +1,13 @@
+from apps.event.models import Event
+from apps.event.test.utils import EventManager
+from apps.user.models import User
+from apps.user.test.utils import UserManager
+
 from django.test import TestCase
 from django.urls import reverse
+
 from rest_framework import status
 from rest_framework.test import APIClient
-
-from apps.user.test.utils import UserManager
-from apps.event.models import Event
-from apps.user.models import User
 
 
 # Create your tests here.
@@ -72,6 +74,7 @@ class CRUDEventTest(TestCase):
     def test_create_event(self):
         response = self.client.post(self.EVENT_LIST_URL, self.event_data)
         self.assertEquals(response.status_code, status.HTTP_201_CREATED)
+        self.assertTrue(not response.data['is_verified'])
 
     def test_create_event_without_credentials(self):
         self.user_manager.logout_user()
@@ -133,6 +136,39 @@ class CRUDEventTest(TestCase):
         response = self.client.delete(event_detail_url)
         self.assertEquals(response.status_code, status.HTTP_204_NO_CONTENT)
         self.assertTrue(len(Event.objects.all()) == 0)
+
+
+class EventActionTest(TestCase):
+    def setUp(self):
+        self.client = APIClient()
+        self.user_manager = UserManager(self.client)
+        self.event_manager = EventManager(self.client)
+
+        self.user1 = self.user_manager.register_user({
+            'email': 'user_cobersih@gmail.com',
+            'password': 'secretpass',
+            'name': 'user_cobersih',
+            'bio': 'user bio'
+        })
+        self.user2 = self.user_manager.register_user({
+            'email': 'user_cobersih2@gmail.com',
+            'password': 'secretpass',
+            'name': 'user_cobersih2',
+            'bio': 'user2 bio'
+        })
+
+        # Login as user_1 and create event
+        self.user_manager.login_user(self.user1)
+        self.event_data = {
+            'name': 'event cobersih',
+            'description': 'deskripsi event cobersih',
+            'preparation': 'persiapan event cobersih',
+            'latitude': -6.121133006890128,
+            'longitude': 106.82900027912028,
+            'start_date': '2023-01-01',
+            'end_date': '2023-01-02'
+        }
+        self.event_id = self.event_manager.create_event(self.event_data)
 
     def test_join_event(self):
         self.user_manager.login_user(self.user2)
@@ -222,3 +258,25 @@ class CRUDEventTest(TestCase):
         update_staff_event_url = reverse('event-staff-list', kwargs={'pk': self.event_id})
         response = self.client.post(update_staff_event_url, {'staff_id': self.user2['id']})
         self.assertEquals(response.status_code, status.HTTP_400_BAD_REQUEST)
+
+    def test_verify_event_as_admin(self):
+        admin_detail = self.user_manager.create_admin()
+        verify_url = reverse('event-verify', kwargs={'pk': self.event_id})
+
+        self.user_manager.login_user(admin_detail)
+        response = self.client.post(verify_url)
+        self.assertEquals(response.status_code, status.HTTP_200_OK)
+        self.assertTrue(response.data['is_verified'])
+
+    def test_verify_event_as_non_admin(self):
+        verify_url = reverse('event-verify', kwargs={'pk': self.event_id})
+
+        response = self.client.post(verify_url)
+        self.assertEquals(response.status_code, status.HTTP_403_FORBIDDEN)
+
+    def test_verify_event_as_anon(self):
+        self.user_manager.logout_user()
+        verify_url = reverse('event-verify', kwargs={'pk': self.event_id})
+
+        response = self.client.post(verify_url)
+        self.assertEquals(response.status_code, status.HTTP_401_UNAUTHORIZED)
