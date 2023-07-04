@@ -1,5 +1,5 @@
-from django.urls import reverse
 from apps.event.models import Event
+from django.urls import reverse
 
 
 class EventManager:
@@ -34,4 +34,15 @@ class EventManager:
     def verify_event(self, event_id):
         event = Event.objects.get(pk=event_id)
         event.is_verified = True
+        event.save()
+
+    def verify_events(self, event_ids):
+        for event_id in event_ids:
+            event = Event.objects.get(pk=event_id)
+            event.is_verified = True
+            event.save()
+
+    def unverify_event(self, event_id):
+        event = Event.objects.get(pk=event_id)
+        event.is_verified = False
         event.save()

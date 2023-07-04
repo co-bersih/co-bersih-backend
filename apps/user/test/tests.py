@@ -1,12 +1,11 @@
-from django.test import TestCase
-from django.urls import reverse
-from rest_framework.test import APIClient
-from rest_framework import status
+import uuid
 
 from apps.event.test.utils import EventManager
 from apps.user.models import User
-import uuid
-
+from django.test import TestCase
+from django.urls import reverse
+from rest_framework import status
+from rest_framework.test import APIClient
 from .utils import UserManager
 
 
@@ -307,7 +306,7 @@ class UserEventTest(TestCase):
             'bio': 'user1 bio'
         })
         self.user_manager.login_user(self.another_user_detail)
-
+        self.event_manager.verify_events(event_ids)
         self.event_manager.join_events(event_ids)
 
     def test_get_user_joined_events(self):

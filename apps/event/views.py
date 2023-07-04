@@ -1,17 +1,14 @@
+from apps.user.models import User
+from django_filters.rest_framework import DjangoFilterBackend
+from rest_framework import filters
+from rest_framework import status
+from rest_framework import viewsets, permissions
 from rest_framework.decorators import api_view, action
 from rest_framework.exceptions import ValidationError
 from rest_framework.response import Response
-from rest_framework import status
-from rest_framework import viewsets, permissions
-from rest_framework import filters
-
-from django_filters.rest_framework import DjangoFilterBackend
-
 from .models import Event
+from .permissions import IsHostOrReadOnly, IsVerifiedEvent
 from .serializers import EventSerializer, EventDetailSerializer, StaffSerializer
-from .permissions import IsHostOrReadOnly
-
-from apps.user.models import User
 
 
 # Create your views here.
@@ -59,7 +56,7 @@ class EventViewSet(viewsets.ModelViewSet):
         serializer = self.get_serializer(event)
         return Response(serializer.data, status=status.HTTP_200_OK)
 
-    @action(detail=True, methods=['post'], permission_classes=[permissions.IsAuthenticated],
+    @action(detail=True, methods=['post'], permission_classes=[permissions.IsAuthenticated, IsVerifiedEvent],
             url_path='join', url_name='join')
     def join_event(self, request, pk=None):
         event = self.get_object()
@@ -73,7 +70,7 @@ class EventViewSet(viewsets.ModelViewSet):
         user.joined_events.add(event)
         return Response({'detail': 'user successfully joined'}, status=status.HTTP_200_OK)
 
-    @action(detail=True, methods=['post'], permission_classes=[permissions.IsAuthenticated],
+    @action(detail=True, methods=['post'], permission_classes=[permissions.IsAuthenticated, IsVerifiedEvent],
             url_path='leave', url_name='leave')
     def leave_event(self, request, pk=None):
         event = self.get_object()

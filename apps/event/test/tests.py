@@ -188,15 +188,25 @@ class EventActionTest(TestCase):
             'end_date': '2023-01-02'
         }
         self.event_id = self.event_manager.create_event(self.event_data)
+        self.event_manager.verify_event(self.event_id)
 
-    def test_join_event(self):
+    def test_join_verified_event(self):
         self.user_manager.login_user(self.user2)
         join_event_url = reverse('event-join', kwargs={'pk': self.event_id})
         response = self.client.post(join_event_url)
 
         self.assertEquals(response.status_code, status.HTTP_200_OK)
 
-    def test_leave_event(self):
+    def test_join_unverified_event(self):
+        self.event_manager.unverify_event(self.event_id)
+
+        self.user_manager.login_user(self.user2)
+        join_event_url = reverse('event-join', kwargs={'pk': self.event_id})
+        response = self.client.post(join_event_url)
+
+        self.assertEquals(response.status_code, status.HTTP_403_FORBIDDEN)
+
+    def test_leave_verified_event(self):
         self.user_manager.login_user(self.user2)
         join_event_url = reverse('event-join', kwargs={'pk': self.event_id})
         self.client.post(join_event_url)
@@ -204,6 +214,14 @@ class EventActionTest(TestCase):
         leave_event_url = reverse('event-leave', kwargs={'pk': self.event_id})
         response = self.client.post(leave_event_url)
         self.assertEquals(response.status_code, status.HTTP_200_OK)
+
+    def test_leave_unverified_event(self):
+        self.event_manager.unverify_event(self.event_id)
+
+        self.user_manager.login_user(self.user2)
+        leave_event_url = reverse('event-leave', kwargs={'pk': self.event_id})
+        response = self.client.post(leave_event_url)
+        self.assertEquals(response.status_code, status.HTTP_403_FORBIDDEN)
 
     def test_join_event_as_host(self):
         join_event_url = reverse('event-join', kwargs={'pk': self.event_id})

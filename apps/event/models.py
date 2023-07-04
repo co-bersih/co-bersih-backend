@@ -1,9 +1,10 @@
 import uuid
-from django.db import models
-from django.conf import settings
+
 from apps.user.models import User
 from apps.utils.models import BaseModel
 from cloudinary.models import CloudinaryField
+from django.conf import settings
+from django.db import models
 
 
 # Create your models here.
