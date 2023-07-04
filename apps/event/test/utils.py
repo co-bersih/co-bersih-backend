@@ -1,4 +1,5 @@
 from django.urls import reverse
+from apps.event.models import Event
 
 
 class EventManager:
@@ -29,3 +30,8 @@ class EventManager:
     def join_events(self, event_ids):
         for event_id in event_ids:
             self.join_event(event_id)
+
+    def verify_event(self, event_id):
+        event = Event.objects.get(pk=event_id)
+        event.is_verified = True
+        event.save()

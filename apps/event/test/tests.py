@@ -43,33 +43,52 @@ class CRUDEventTest(TestCase):
             'end_date': '2023-01-02'
         }
         self.event_id = self.create_event(self.event_data)
+        self.verify_event(self.event_id)
 
     def create_event(self, event_data):
         response = self.client.post(self.EVENT_LIST_URL, event_data)
         return response.data['id']
 
-    def test_create_list_event(self):
+    def verify_event(self, event_id):
+        event = Event.objects.get(pk=event_id)
+        event.is_verified = True
+        event.save()
+
+    def test_create_list_verified_event_(self):
         initial = len(Event.objects.all())
         total = 10
 
         for i in range(total):
             self.event_data['name'] = f'{self.event_data["name"]}{i}'
-            self.client.post(self.EVENT_LIST_URL, self.event_data)
+            event_id = self.create_event(self.event_data)
+            self.verify_event(event_id)
 
         response = self.client.get(self.EVENT_LIST_URL)
         self.assertEquals(response.status_code, status.HTTP_200_OK)
         self.assertEquals(response.data['count'], initial + total)
 
-    def test_find_list_event_by_name(self):
+    def test_find_list_verified_event_by_name(self):
         total = 10
 
         for i in range(total):
             self.event_data['name'] = f'{self.event_data["name"]}{i}'
-            self.client.post(self.EVENT_LIST_URL, self.event_data)
+            event_id = self.create_event(self.event_data)
+            self.verify_event(event_id)
 
         response = self.client.get(f'{self.EVENT_LIST_URL}?search={self.event_data["name"]}')
         self.assertEquals(response.status_code, status.HTTP_200_OK)
         self.assertTrue(response.data['count'] == 1)
+
+    def test_find_list_unverified_event(self):
+        total_unverified_event = 10
+
+        for i in range(total_unverified_event):
+            self.event_data['name'] = f'{self.event_data["name"]}{i}'
+            event_id = self.create_event(self.event_data)
+
+        response = self.client.get(f'{self.EVENT_LIST_URL}?is_verified=False')
+        self.assertEquals(response.status_code, status.HTTP_200_OK)
+        self.assertEquals(response.data['count'], total_unverified_event)
 
     def test_create_event(self):
         response = self.client.post(self.EVENT_LIST_URL, self.event_data)

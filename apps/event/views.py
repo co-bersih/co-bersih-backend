@@ -5,6 +5,8 @@ from rest_framework import status
 from rest_framework import viewsets, permissions
 from rest_framework import filters
 
+from django_filters.rest_framework import DjangoFilterBackend
+
 from .models import Event
 from .serializers import EventSerializer, EventDetailSerializer, StaffSerializer
 from .permissions import IsHostOrReadOnly
@@ -23,13 +25,13 @@ def hello_world(request):
 
 
 class EventViewSet(viewsets.ModelViewSet):
-    queryset = Event.objects.all()
     serializer_class = EventSerializer
     permission_classes = [permissions.IsAuthenticatedOrReadOnly,
                           IsHostOrReadOnly]
     http_method_names = ['get', 'head', 'post', 'patch', 'delete']
-    filter_backends = [filters.SearchFilter]
+    filter_backends = [filters.SearchFilter, DjangoFilterBackend]
     search_fields = ['name']
+    filterset_fields = ['is_verified']
 
     def perform_create(self, serializer):
         event = serializer.save(host=self.request.user)
@@ -39,6 +41,13 @@ class EventViewSet(viewsets.ModelViewSet):
         if self.action == 'retrieve':
             return EventDetailSerializer
         return EventSerializer
+
+    def get_queryset(self):
+        queryset = Event.objects.all()
+        is_verified = self.request.query_params.get('is_verified')
+        if self.action == 'list' and is_verified is None:
+            queryset = queryset.filter(is_verified=True)
+        return queryset
 
     @action(detail=True, methods=['post'], permission_classes=[permissions.IsAdminUser],
             url_path='verify', url_name='verify')
