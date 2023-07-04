@@ -3,6 +3,7 @@ from rest_framework.exceptions import ValidationError
 from rest_framework.response import Response
 from rest_framework import status
 from rest_framework import viewsets, permissions
+from rest_framework import filters
 
 from .models import Event
 from .serializers import EventSerializer, EventDetailSerializer, StaffSerializer
@@ -27,6 +28,8 @@ class EventViewSet(viewsets.ModelViewSet):
     permission_classes = [permissions.IsAuthenticatedOrReadOnly,
                           IsHostOrReadOnly]
     http_method_names = ['get', 'head', 'post', 'patch', 'delete']
+    filter_backends = [filters.SearchFilter]
+    search_fields = ['name']
 
     def perform_create(self, serializer):
         event = serializer.save(host=self.request.user)

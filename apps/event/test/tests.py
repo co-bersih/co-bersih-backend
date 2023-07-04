@@ -58,6 +58,17 @@ class CRUDEventTest(TestCase):
         self.assertEquals(response.status_code, status.HTTP_200_OK)
         self.assertEquals(response.data['count'], initial + total)
 
+    def test_find_list_event_by_name(self):
+        total = 10
+
+        for i in range(total):
+            self.event_data['name'] = f'{self.event_data["name"]}{i}'
+            self.client.post(self.EVENT_LIST_URL, self.event_data)
+
+        response = self.client.get(f'{self.EVENT_LIST_URL}?search={self.event_data["name"]}')
+        self.assertEquals(response.status_code, status.HTTP_200_OK)
+        self.assertTrue(response.data['count'] == 1)
+
     def test_create_event(self):
         response = self.client.post(self.EVENT_LIST_URL, self.event_data)
         self.assertEquals(response.status_code, status.HTTP_201_CREATED)
