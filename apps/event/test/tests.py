@@ -54,7 +54,7 @@ class CRUDEventTest(TestCase):
         event.is_verified = True
         event.save()
 
-    def test_create_list_verified_event_(self):
+    def test_create_list_verified_event(self):
         initial = len(Event.objects.all())
         total = 10
 

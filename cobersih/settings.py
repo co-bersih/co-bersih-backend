@@ -85,6 +85,7 @@ INSTALLED_APPS = [
     'apps.utils',
     'apps.user',
     'apps.event',
+    'apps.report',
 ]
 
 MIDDLEWARE = [
