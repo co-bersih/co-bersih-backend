@@ -41,11 +41,11 @@ class EventDetailSerializer(EventSerializer):
 
 
 class StaffSerializer(serializers.Serializer):
-    staff_id = serializers.UUIDField()
+    staff_email = serializers.EmailField()
 
-    def validate_staff_id(self, value):
+    def validate_staff_email(self, value):
         try:
-            User.objects.get(pk=value)
+            User.objects.get(email=value)
         except User.DoesNotExist:
-            raise serializers.ValidationError('staff_id not found', code='invalid_id')
+            raise serializers.ValidationError('staff_email not found', code='invalid_id')
         return value

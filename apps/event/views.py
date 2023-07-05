@@ -81,11 +81,11 @@ class EventViewSet(viewsets.ModelViewSet):
     @action(detail=True, methods=['post'], url_path='staffs', url_name='staff-list')
     def add_staff(self, request, pk=None):
         event = self.get_object()
-        staff_id = request.data.get('staff_id', '')
+        staff_email = request.data.get('staff_email', '')
 
         serializer = StaffSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
-        staff = User.objects.get(pk=staff_id)
+        staff = User.objects.get(email=staff_email)
 
         if staff in event.joined_users.all():
             raise ValidationError({'id': 'you already joined this event as user'}, code='user_already_joined_event')
@@ -93,16 +93,16 @@ class EventViewSet(viewsets.ModelViewSet):
         event.staffs.add(staff)
         return Response({'detail': 'staff successfully updated'}, status=status.HTTP_200_OK)
 
-    @action(detail=True, methods=['delete'], url_path='staffs/(?P<staff_pk>[^/.]+)', url_name='staff-detail')
-    def delete_staff(self, request, pk=None, staff_pk=None):
+    @action(detail=True, methods=['delete'], url_path=r'staffs/(?P<staff_email>[\w.@+-]+)', url_name='staff-detail')
+    def delete_staff(self, request, pk=None, staff_email=None):
         event = self.get_object()
 
-        serializer = StaffSerializer(data={'staff_id': staff_pk})
+        serializer = StaffSerializer(data={'staff_email': staff_email})
         serializer.is_valid(raise_exception=True)
-        staff = User.objects.get(pk=staff_pk)
+        staff = User.objects.get(email=staff_email)
 
         if event.host == staff:
-            raise ValidationError({'id': 'you are the host of this event'}, code='user_is_event_host')
+            raise ValidationError({'email': 'you are the host of this event'}, code='user_is_event_host')
 
         event.staffs.remove(staff)
         return Response({'detail': 'staff successfully removed'}, status=status.HTTP_200_OK)

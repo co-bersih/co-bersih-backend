@@ -232,7 +232,7 @@ class EventActionTest(TestCase):
     def test_join_event_as_staff(self):
         # Update user2 as user1 event staff
         update_staff_event_url = reverse('event-staff-list', kwargs={'pk': self.event_id})
-        self.client.post(update_staff_event_url, {'staff_id': self.user2['id']})
+        self.client.post(update_staff_event_url, {'staff_email': self.user2['email']})
 
         # Login as user2
         self.user_manager.login_user(self.user2)
@@ -244,15 +244,15 @@ class EventActionTest(TestCase):
     def test_update_event_staffs(self):
         # Update event with new staff (another_user_detail)
         update_staff_event_url = reverse('event-staff-list', kwargs={'pk': self.event_id})
-        response = self.client.post(update_staff_event_url, {'staff_id': self.user2['id']})
+        response = self.client.post(update_staff_event_url, {'staff_email': self.user2['email']})
         self.assertEquals(response.status_code, status.HTTP_200_OK)
         self.assertTrue(len(User.objects.get(pk=self.user2['id']).events_staff.all()) == 1)
 
     def test_update_event_staffs_with_invalid_id(self):
         update_staff_event_url = reverse('event-staff-list', kwargs={'pk': self.event_id})
-        response = self.client.post(update_staff_event_url, {'staff_id': '00000000-0000-0000-0000-000000000000'})
+        response = self.client.post(update_staff_event_url, {'staff_email': 'invalid@mail.com'})
         self.assertEquals(response.status_code, status.HTTP_400_BAD_REQUEST)
-        self.assertTrue(response.data['errors'][0]['attr'] == 'staff_id')
+        self.assertTrue(response.data['errors'][0]['attr'] == 'staff_email')
 
     def test_update_event_staffs_with_invalid_user(self):
         self.user_manager.login_user(self.user2)
@@ -270,7 +270,7 @@ class EventActionTest(TestCase):
 
         # Remove new staff
         delete_staff_event_url = reverse('event-staff-detail',
-                                         kwargs={'pk': self.event_id, 'staff_pk': self.user2['id']})
+                                         kwargs={'pk': self.event_id, 'staff_email': self.user2['email']})
         response = self.client.delete(delete_staff_event_url)
         self.assertEquals(response.status_code, status.HTTP_200_OK)
         self.assertTrue(len(User.objects.get(pk=self.user2['id']).events_staff.all()) == 0)
@@ -285,7 +285,7 @@ class EventActionTest(TestCase):
 
         # Remove new staff
         delete_staff_event_url = reverse('event-staff-detail',
-                                         kwargs={'pk': self.event_id, 'staff_pk': self.user2['id']})
+                                         kwargs={'pk': self.event_id, 'staff_email': self.user2['email']})
         response = self.client.delete(delete_staff_event_url)
         self.assertEquals(response.status_code, status.HTTP_403_FORBIDDEN)
         self.assertTrue(response.data['errors'][0]['code'] == 'permission_denied')
