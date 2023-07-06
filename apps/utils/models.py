@@ -57,3 +57,4 @@ class GeoLocation(GeoLocationModel):
 
     class Meta:
         unique_together = ['id', 'is_deleted']
+        ordering = ['name']
