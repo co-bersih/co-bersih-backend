@@ -32,7 +32,11 @@ class EventSerializer(serializers.ModelSerializer):
 
 
 class EventDetailSerializer(EventSerializer):
-    staffs = serializers.PrimaryKeyRelatedField(many=True, read_only=True)
+    staffs = serializers.SlugRelatedField(
+        many=True,
+        read_only=True,
+        slug_field='email'
+     )
     supports = serializers.PrimaryKeyRelatedField(many=True, read_only=True)
 
     class Meta(EventSerializer.Meta):
