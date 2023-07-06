@@ -4,6 +4,8 @@ from .models import Report
 from .serializers import ReportSerializer
 from .permissions import IsReporterOrReadOnly
 
+from apps.utils.filters import GeoPointFilter
+
 
 # Create your views here.
 class ReportViewSet(viewsets.ModelViewSet):
@@ -12,6 +14,7 @@ class ReportViewSet(viewsets.ModelViewSet):
     permission_classes = [permissions.IsAuthenticatedOrReadOnly,
                           IsReporterOrReadOnly]
     http_method_names = ['get', 'head', 'post', 'patch', 'delete']
+    filter_backends = [GeoPointFilter]
 
     def perform_create(self, serializer):
         serializer.save(reporter=self.request.user)

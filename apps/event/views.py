@@ -1,4 +1,3 @@
-from apps.user.models import User
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import filters
 from rest_framework import status
@@ -6,6 +5,9 @@ from rest_framework import viewsets, permissions
 from rest_framework.decorators import api_view, action
 from rest_framework.exceptions import ValidationError
 from rest_framework.response import Response
+
+from apps.user.models import User
+from apps.utils.filters import GeoPointFilter
 from .models import Event
 from .permissions import IsHostOrReadOnly, IsVerifiedEvent
 from .serializers import EventSerializer, EventDetailSerializer, StaffSerializer
@@ -22,11 +24,12 @@ def hello_world(request):
 
 
 class EventViewSet(viewsets.ModelViewSet):
+    queryset = Event.objects.all()
     serializer_class = EventSerializer
     permission_classes = [permissions.IsAuthenticatedOrReadOnly,
                           IsHostOrReadOnly]
     http_method_names = ['get', 'head', 'post', 'patch', 'delete']
-    filter_backends = [filters.SearchFilter, DjangoFilterBackend]
+    filter_backends = [filters.SearchFilter, DjangoFilterBackend, GeoPointFilter]
     search_fields = ['name']
     filterset_fields = ['is_verified']
 
@@ -38,13 +41,6 @@ class EventViewSet(viewsets.ModelViewSet):
         if self.action == 'retrieve':
             return EventDetailSerializer
         return EventSerializer
-
-    def get_queryset(self):
-        queryset = Event.objects.all()
-        is_verified = self.request.query_params.get('is_verified')
-        if self.action == 'list' and is_verified is None:
-            queryset = queryset.filter(is_verified=True)
-        return queryset
 
     @action(detail=True, methods=['post'], permission_classes=[permissions.IsAdminUser],
             url_path='verify', url_name='verify')
