@@ -1,22 +1,21 @@
 import uuid
 
-from apps.user.models import User
-from apps.utils.models import BaseModel
 from cloudinary.models import CloudinaryField
 from django.conf import settings
 from django.db import models
 
+from apps.user.models import User
+from apps.utils.models import GeoLocationModel
+
 
 # Create your models here.
-class Event(BaseModel):
+class Event(GeoLocationModel):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     host = models.ForeignKey(User, on_delete=models.CASCADE, related_name='events_host')
     name = models.CharField(max_length=100)
     description = models.TextField()
     preparation = models.TextField()
     image = CloudinaryField('image', null=True, blank=True, default=None)
-    latitude = models.FloatField()
-    longitude = models.FloatField()
     start_date = models.DateTimeField()
     end_date = models.DateTimeField()
     staffs = models.ManyToManyField(User, related_name='events_staff')
