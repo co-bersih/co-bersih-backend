@@ -66,6 +66,8 @@ ALLOWED_HOSTS = [
     '127.0.0.1',
     'localhost',
 ]
+if env('ENVIRONMENT').lower() != 'prod':
+    ALLOWED_HOSTS = ['*']
 
 # Application definition
 
@@ -225,4 +227,8 @@ cloudinary.config(
 )
 
 # GeoDjango
-GDAL_LIBRARY_PATH = env('GDAL_LIBRARY_PATH')
+if (env('GDAL_LIBRARY_PATH', default=False)):
+    GDAL_LIBRARY_PATH = env('GDAL_LIBRARY_PATH')
+    
+if (env('GEOS_LIBRARY_PATH', default=False)):
+    GEOS_LIBRARY_PATH = env('GEOS_LIBRARY_PATH')

@@ -1,0 +1,38 @@
+version: "3.10"
+
+services:
+  postgres-db:
+    image: kartoza/postgis:12.0
+    ports:
+      - 5432:5432
+    volumes:
+      - postgres_data:/var/lib/postgresql
+    environment:
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASS=clean23
+      - POSTGRES_DBNAME=cobersih
+    restart: "on-failure"
+    networks:
+      - cobersih-api
+
+  api:
+      build:
+        context: .
+      image: veivel/co-bersih-backend-api:latest
+      command: bash -c "sleep 8 && python3 manage.py migrate && echo \"from apps.user.models import User; User.objects.create_superuser(email='administrator@mail.com', password='administrator')\" | python3 manage.py shell && python3 manage.py runserver 0.0.0.0:8000"
+      volumes:
+        - .:/app
+      ports:
+        - 8001:8000
+      env_file:
+        - cobersih/.env
+      restart: "on-failure"
+      depends_on:
+        - postgres-db
+      networks:
+        - cobersih-api
+networks:
+   cobersih-api:
+      driver: bridge
+volumes:
+  postgres_data:
