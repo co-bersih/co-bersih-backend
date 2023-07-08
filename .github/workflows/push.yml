@@ -32,18 +32,18 @@ jobs:
       - 
         name: Push tagged Docker image
         run: docker push ${{ secrets.DOCKER_USERNAME }}/${{ secrets.DOCKER_REGISTRY_NAME }}:${{ secrets.DOCKER_IMAGE_TAG }}
-  deploy:
-    needs: build-push
-    runs-on: ubuntu-latest
-    steps:
-      - name: SSH and deploy with Docker
-        uses: appleboy/ssh-action@master
-        with:
-          host: ${{ secrets.VM_IP_ADDRESS }}
-          username: ${{ secrets.VM_USER }}
-          key: ${{ secrets.VM_PRIVATE_KEY }}
-          script: |
-            docker container rm -f ${{ secrets.DOCKER_REGISTRY_NAME }} \
-            && docker image rm -f ${{ secrets.DOCKER_USERNAME }}/${{ secrets.DOCKER_REGISTRY_NAME }}:${{ secrets.DOCKER_IMAGE_TAG }} \
-            && docker run --name ${{ secrets.DOCKER_REGISTRY_NAME }} -e ENV=${{ secrets.ENV }} -e SERVER_PORT=${{ secrets.SERVER_PORT }} -e REDIS_HOST=${{ secrets.REDIS_HOST }} -e REDIS_PORT=${{ secrets.REDIS_PORT }} -e REDIS_PASSWORD=${{ secrets.REDIS_PASSWORD }} -e REDIS_SUBMISSION_STREAM=${{ secrets.REDIS_SUBMISSION_STREAM }} -e JUDGE_DB_ROOT_CERT=${{ secrets.JUDGE_DB_ROOT_CERT }} -e JUDGE_DB_URL=${{ secrets.JUDGE_DB_URL }} -e JUDGE_DB_HOST=${{ secrets.JUDGE_DB_HOST }} -e JUDGE_DB_PORT=${{ secrets.JUDGE_DB_PORT }} -e JUDGE_DB_NAME=${{ secrets.JUDGE_DB_NAME }} -e JUDGE_DB_USER=${{ secrets.JUDGE_DB_USER }} -e JUDGE_DB_PASSWORD=${{ secrets.JUDGE_DB_PASSWORD }} -e JUDGE_SAMPLE_DB_USER=${{ secrets.JUDGE_SAMPLE_DB_USER }} -e JUDGE_SAMPLE_DB_PASSWORD=${{ secrets.JUDGE_SAMPLE_DB_PASSWORD }} -e JUDGE_TEST_DB_USER=${{ secrets.JUDGE_TEST_DB_USER }} -e JUDGE_TEST_DB_PASSWORD=${{ secrets.JUDGE_TEST_DB_PASSWORD }} -e JUDGE_USER_DB_USER=${{ secrets.JUDGE_USER_DB_USER }} -e JUDGE_USER_DB_PASSWORD=${{ secrets.JUDGE_USER_DB_PASSWORD }} -p 7070:${{ secrets.SERVER_PORT }} -d ${{ secrets.DOCKER_USERNAME }}/${{ secrets.DOCKER_REGISTRY_NAME }}:${{ secrets.DOCKER_IMAGE_TAG }} \
-            && docker container ls -n 1
+  # deploy:
+  #   needs: build-push
+  #   runs-on: ubuntu-latest
+  #   steps:
+  #     - name: SSH and deploy with Docker
+  #       uses: appleboy/ssh-action@master
+  #       with:
+  #         host: ${{ secrets.VM_IP_ADDRESS }}
+  #         username: ${{ secrets.VM_USER }}
+  #         key: ${{ secrets.VM_PRIVATE_KEY }}
+  #         script: |
+  #           docker container rm -f ${{ secrets.DOCKER_REGISTRY_NAME }} \
+  #           && docker image rm -f ${{ secrets.DOCKER_USERNAME }}/${{ secrets.DOCKER_REGISTRY_NAME }}:${{ secrets.DOCKER_IMAGE_TAG }} \
+  #           && docker run --name -d ${{ secrets.DOCKER_USERNAME }}/${{ secrets.DOCKER_REGISTRY_NAME }}:${{ secrets.DOCKER_IMAGE_TAG }} \
+  #           && docker container ls -n 1
