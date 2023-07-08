@@ -23,7 +23,7 @@ services:
   api:
       build:
         context: .
-      image: co-bersih-backend-api:latest
+      image: veivel/co-bersih-backend-api:latest
       command: bash -c "python3 manage.py migrate && python3 manage.py runserver 0.0.0.0:8000"
       volumes:
         - .:/app

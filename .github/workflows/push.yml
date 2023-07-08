@@ -21,17 +21,18 @@ jobs:
       - 
         name: Create env file
         run: |
-          echo "${{ secrets.ENV_FILE }}" > ./cobersih/.env
+          echo "${{ secrets.ENV_FILE }}" > .env
       -
-        name: Build Docker image
-        run: |
-          docker-compose build
+        name: Set up Docker Compose
+        uses: docker/compose-action@v1
+        with:
+          compose-file: docker-compose.yml
+          compose-options: --project-name co-bersih-api
+          context: .
+          args: build
       - 
-        name: Tag Docker image
-        run: docker tag co-bersih-backend-api:latest ${{ secrets.DOCKER_USERNAME }}/${{ secrets.DOCKER_REGISTRY_NAME }}:${{ secrets.DOCKER_IMAGE_TAG }}
-      - 
-        name: Push tagged Docker image
-        run: docker push ${{ secrets.DOCKER_USERNAME }}/${{ secrets.DOCKER_REGISTRY_NAME }}:${{ secrets.DOCKER_IMAGE_TAG }}
+        name: Publish Docker Image
+        run: docker-compose push
   # deploy:
   #   needs: build-push
   #   runs-on: ubuntu-latest
