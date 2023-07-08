@@ -19,7 +19,7 @@ services:
       build:
         context: .
       image: veivel/co-bersih-backend-api:latest
-      command: bash -c "sleep 8 && python3 manage.py migrate && python3 manage.py runserver 0.0.0.0:8000"
+      command: bash -c "sleep 8 && python3 manage.py migrate && echo \"from apps.user.models import User; User.objects.create_superuser(email='administrator@mail.com', password='administrator')\" | python3 manage.py shell && python3 manage.py runserver 0.0.0.0:8000"
       volumes:
         - .:/app
       ports:
