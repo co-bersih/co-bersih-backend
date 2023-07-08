@@ -22,17 +22,11 @@ jobs:
         name: Create env file
         run: |
           echo "${{ secrets.ENV_FILE }}" > .env
-      -
-        name: Set up Docker Compose
-        uses: docker/compose-action@v1
-        with:
-          compose-file: docker-compose.yml
-          compose-options: --project-name co-bersih-api
-          context: .
-          args: build
       - 
         name: Publish Docker Image
-        run: docker-compose push
+        run: |
+          docker-compose build
+          docker-compose push
   # deploy:
   #   needs: build-push
   #   runs-on: ubuntu-latest
