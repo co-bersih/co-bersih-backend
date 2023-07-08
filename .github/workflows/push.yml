@@ -3,8 +3,7 @@ name: ci
 on:
   push:
     branches:
-      - "feat/deployment-v2"
-      - main
+      - "feat/none"
 
 jobs:
   build-push:
