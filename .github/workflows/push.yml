@@ -21,7 +21,8 @@ jobs:
       - 
         name: Create env file
         run: |
-          echo "${{ secrets.ENV_FILE }}" > .env
+          mkdir cobersih
+          echo "${{ secrets.ENV_FILE }}" > ./cobersih/.env
       - 
         name: Publish Docker Image
         run: |
