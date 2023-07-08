@@ -32,7 +32,7 @@ jobs:
           docker-compose push
       - 
         name: Tag Docker image
-        run: docker tag co-bersih-backend-api-1 ${{ secrets.DOCKER_USERNAME }}/${{ secrets.DOCKER_REGISTRY_NAME }}:${{ secrets.DOCKER_IMAGE_TAG }}
+        run: docker tag cobersih-backend-api ${{ secrets.DOCKER_USERNAME }}/${{ secrets.DOCKER_REGISTRY_NAME }}:${{ secrets.DOCKER_IMAGE_TAG }}
       - 
         name: Push tagged Docker image
         run: docker push ${{ secrets.DOCKER_USERNAME }}/${{ secrets.DOCKER_REGISTRY_NAME }}:${{ secrets.DOCKER_IMAGE_TAG }}
