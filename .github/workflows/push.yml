@@ -20,8 +20,7 @@ jobs:
           password: ${{ secrets.DOCKER_ACCESS_TOKEN }}
       - 
         name: Create env file
-        run: |
-          echo "${{ secrets.ENV_FILE }}" > ./cobersih/.env
+        run: echo "${{ secrets.ENV_FILE }}" > ./cobersih/.env
       - 
         name: Publish Docker Image
         run: |
