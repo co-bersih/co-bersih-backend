@@ -66,7 +66,7 @@ ALLOWED_HOSTS = [
     '127.0.0.1',
     'localhost',
 ]
-if env('ENVIRONMENT').lower() == 'prod':
+if env('ENVIRONMENT').lower() != 'prod':
     ALLOWED_HOSTS = ['*']
 
 # Application definition
