@@ -33,13 +33,15 @@ SECRET_KEY = env('SECRET_KEY')
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = env('DEBUG')
 
-CSRF_ALLOWED_ORIGINS = ['https://co-bersih-backend.fly.dev']
-CSRF_TRUSTED_ORIGINS = ['https://co-bersih-backend.fly.dev']
+CSRF_ALLOWED_ORIGINS = ['https://co-bersih-backend.fly.dev', 'https://cobersihapi.veivelp.com', 'https://cobersih.servehttp.com']
+CSRF_TRUSTED_ORIGINS = ['https://co-bersih-backend.fly.dev', 'https://cobersihapi.veivelp.com', 'https://cobersih.servehttp.com']
 
 CORS_ALLOWED_ORIGINS = [
     'http://localhost:3000',
     'https://co-bersih-git-development-co-bersih.vercel.app',
     'https://co-bersih.vercel.app',
+    'https://co-bersih-dev.vercel.app',
+    'https://cobersih.veivelp.com',
 ]
 
 CORS_ALLOW_ALL_ORIGINS = True
