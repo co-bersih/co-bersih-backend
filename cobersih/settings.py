@@ -67,6 +67,8 @@ ALLOWED_HOSTS = [
     'co-bersih-backend.fly.dev',
     '127.0.0.1',
     'localhost',
+    'cobersihapi.veivelp.com', 
+    'cobersih.servehttp.com'
 ]
 if env('ENVIRONMENT').lower() != 'prod':
     ALLOWED_HOSTS = ['*']
