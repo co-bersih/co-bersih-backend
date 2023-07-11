@@ -33,13 +33,15 @@ SECRET_KEY = env('SECRET_KEY')
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = env('DEBUG')
 
-CSRF_ALLOWED_ORIGINS = ['https://co-bersih-backend.fly.dev']
-CSRF_TRUSTED_ORIGINS = ['https://co-bersih-backend.fly.dev']
+CSRF_ALLOWED_ORIGINS = ['https://co-bersih-backend.fly.dev', 'https://cobersihapi.veivelp.com', 'https://cobersih.servehttp.com']
+CSRF_TRUSTED_ORIGINS = ['https://co-bersih-backend.fly.dev', 'https://cobersihapi.veivelp.com', 'https://cobersih.servehttp.com']
 
 CORS_ALLOWED_ORIGINS = [
     'http://localhost:3000',
     'https://co-bersih-git-development-co-bersih.vercel.app',
     'https://co-bersih.vercel.app',
+    'https://co-bersih-dev.vercel.app',
+    'https://cobersih.veivelp.com',
 ]
 
 CORS_ALLOW_ALL_ORIGINS = True
@@ -65,7 +67,11 @@ ALLOWED_HOSTS = [
     'co-bersih-backend.fly.dev',
     '127.0.0.1',
     'localhost',
+    'cobersihapi.veivelp.com', 
+    'cobersih.servehttp.com'
 ]
+if env('ENVIRONMENT').lower() != 'prod':
+    ALLOWED_HOSTS = ['*']
 
 # Application definition
 
@@ -77,6 +83,8 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'django.contrib.gis',
+    'django_filters',
     'rest_framework',
     'rest_framework_simplejwt',
     'rest_framework_simplejwt.token_blacklist',
@@ -84,6 +92,7 @@ INSTALLED_APPS = [
     'apps.utils',
     'apps.user',
     'apps.event',
+    'apps.report',
 ]
 
 MIDDLEWARE = [
@@ -122,7 +131,7 @@ WSGI_APPLICATION = 'cobersih.wsgi.application'
 
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.postgresql',
+        'ENGINE': 'django.contrib.gis.db.backends.postgis',
         'NAME': env('DB_NAME'),
         'USER': env('DB_USER'),
         'PASSWORD': env('DB_PASSWORD'),
@@ -220,3 +229,10 @@ cloudinary.config(
     api_key=CLOUDINARY_API_KEY,
     api_secret=CLOUDINARY_API_SECRET,
 )
+
+# GeoDjango
+if (env('GDAL_LIBRARY_PATH', default=False)):
+    GDAL_LIBRARY_PATH = env('GDAL_LIBRARY_PATH')
+    
+if (env('GEOS_LIBRARY_PATH', default=False)):
+    GEOS_LIBRARY_PATH = env('GEOS_LIBRARY_PATH')

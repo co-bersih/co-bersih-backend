@@ -1,7 +1,7 @@
+from apps.user.models import User
+from apps.user.serializers import UserSerializer
 from rest_framework import serializers
 from .models import Event
-from apps.user.serializers import UserSerializer
-from apps.user.models import User
 
 
 class EventSerializer(serializers.ModelSerializer):
@@ -13,7 +13,7 @@ class EventSerializer(serializers.ModelSerializer):
     class Meta:
         model = Event
         fields = ['id', 'host', 'name', 'total_participant', 'description', 'preparation', 'image', 'image_url',
-                  'latitude', 'longitude', 'start_date', 'end_date']
+                  'latitude', 'longitude', 'start_date', 'end_date', 'is_verified']
 
     def validate(self, data):
         """
@@ -32,7 +32,11 @@ class EventSerializer(serializers.ModelSerializer):
 
 
 class EventDetailSerializer(EventSerializer):
-    staffs = serializers.PrimaryKeyRelatedField(many=True, read_only=True)
+    staffs = serializers.SlugRelatedField(
+        many=True,
+        read_only=True,
+        slug_field='email'
+     )
     supports = serializers.PrimaryKeyRelatedField(many=True, read_only=True)
 
     class Meta(EventSerializer.Meta):
@@ -41,11 +45,11 @@ class EventDetailSerializer(EventSerializer):
 
 
 class StaffSerializer(serializers.Serializer):
-    staff_id = serializers.UUIDField()
+    staff_email = serializers.EmailField()
 
-    def validate_staff_id(self, value):
+    def validate_staff_email(self, value):
         try:
-            User.objects.get(pk=value)
+            User.objects.get(email=value)
         except User.DoesNotExist:
-            raise serializers.ValidationError({'staff_id': 'staff_id not found'}, code='invalid_id')
+            raise serializers.ValidationError('staff_email not found', code='invalid_id')
         return value

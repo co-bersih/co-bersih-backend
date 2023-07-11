@@ -1,3 +1,7 @@
+import uuid
+
+from django.contrib.gis.db.models import PointField
+from django.contrib.gis.geos import Point
 from django.db import models
 
 
@@ -19,7 +23,7 @@ class BaseModel(models.Model):
     objects = AppManager()
     is_deleted = models.BooleanField(default=False)
 
-    def delete(self):
+    def delete(self, *args, **kwargs):
         """
         Soft delete
         """
@@ -27,8 +31,30 @@ class BaseModel(models.Model):
         self.save()
 
 
+class GeoLocationModel(BaseModel):
+    class Meta:
+        abstract = True
+
+    latitude = models.FloatField()
+    longitude = models.FloatField()
+    point = PointField(srid=4326, blank=True, null=True)
+
+    def save(self, *args, **kwargs):
+        self.point = Point(self.longitude, self.latitude, srid=4326)
+        super().save(*args, **kwargs)
+
+
 class Dummy(BaseModel):
+    name = models.CharField(max_length=100)
+
     class Meta:
         unique_together = ['name', 'is_deleted']
 
+
+class GeoLocation(GeoLocationModel):
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     name = models.CharField(max_length=100)
+
+    class Meta:
+        unique_together = ['id', 'is_deleted']
+        ordering = ['name']

@@ -1,23 +1,30 @@
-ARG PYTHON_VERSION=3.10-slim-buster
+FROM python:3.10.6-slim-buster
 
-FROM python:${PYTHON_VERSION}
+WORKDIR /app
+
+LABEL maintainer="Co-Bersih"
+LABEL description="Development image for the Co-Bersih API"
 
 ENV PYTHONDONTWRITEBYTECODE 1
 ENV PYTHONUNBUFFERED 1
 
-RUN mkdir -p /code
+RUN apt-get update \
+    && apt-get -y install netcat gcc postgresql \
+    && apt-get clean
 
-WORKDIR /code
+RUN apt-get update \
+    && apt-get install -y binutils libproj-dev gdal-bin python-gdal python3-gdal
 
-COPY requirements.txt /tmp/requirements.txt
-ENV SECRET_KEY "non-secret-key-for-building-purposes"
-RUN set -ex && \
-    pip install --upgrade pip && \
-    pip install -r /tmp/requirements.txt && \
-    rm -rf /root/.cache/
-COPY . /code
-# RUN python manage.py collectstatic --noinput
+RUN pip install --upgrade pip
+
+COPY ./requirements.txt /app/requirements.txt
+
+RUN pip install -r requirements.txt
+
+COPY . /app
+
+RUN echo "from apps.user.models import User; User.objects.create_superuser(email='administrator@mail.com', password='administrator')" | python3 manage.py shell
 
 EXPOSE 8000
 
-CMD ["gunicorn", "--bind", ":8000", "--workers", "2", "cobersih.wsgi"]
+CMD ["python3", "manage.py", "runserver", "0.0.0.0:8000"]

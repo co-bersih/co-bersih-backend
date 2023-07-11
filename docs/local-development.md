@@ -1,6 +1,7 @@
 # Panduan cara menjalankan Django Project pada Local Development Environment
 
-Pastikan bahwa `Python`, `pip`, dan `postgresql` sudah ter-*install* pada komputer kalian.
+Pastikan bahwa `Python`, `pip`, dan `postgresql` sudah ter-*install* pada komputer kalian. 
+Selain itu, ikuti panduan instalasi [GeoDjango](https://docs.djangoproject.com/en/4.2/ref/contrib/gis/install/#geodjango-installation).
 
 1. Clone repository
 
