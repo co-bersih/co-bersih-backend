@@ -23,7 +23,7 @@ RUN pip install -r requirements.txt
 
 COPY . /app
 
-RUN echo "from apps.user.models import User; User.objects.create_superuser(email='administrator@mail.com', password='administrator')" | python3 manage.py shell
+# RUN echo "from apps.user.models import User; User.objects.create_superuser(email='administrator@mail.com', password='administrator')" | python3 manage.py shell
 
 EXPOSE 8000
 
