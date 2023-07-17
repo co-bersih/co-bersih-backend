@@ -4,12 +4,14 @@ from rest_framework import status
 from rest_framework import viewsets, permissions
 from rest_framework.decorators import api_view, action
 from rest_framework.exceptions import ValidationError
+from rest_framework.generics import ListAPIView
 from rest_framework.response import Response
 
 from apps.user.models import User
+from apps.user.serializers import UserSerializer
 from apps.utils.filters import GeoPointFilter
 from .models import Event
-from .permissions import IsHostOrReadOnly, IsVerifiedEvent
+from .permissions import IsHostOrReadOnly, IsVerifiedEvent, IsStaff
 from .serializers import EventSerializer, EventDetailSerializer, StaffSerializer
 
 
@@ -103,3 +105,12 @@ class EventViewSet(viewsets.ModelViewSet):
 
         event.staffs.remove(staff)
         return Response({'detail': 'staff successfully removed'}, status=status.HTTP_200_OK)
+
+
+class EventJoinedUserView(ListAPIView):
+    serializer_class = UserSerializer
+    permission_classes = [permissions.IsAuthenticated, IsStaff]
+
+    def get_queryset(self):
+        pk = self.kwargs['pk']
+        return User.objects.filter(joined_events=pk)

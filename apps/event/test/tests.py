@@ -1,13 +1,12 @@
+from django.test import TestCase
+from django.urls import reverse
+from rest_framework import status
+from rest_framework.test import APIClient
+
 from apps.event.models import Event
 from apps.event.test.utils import EventManager
 from apps.user.models import User
 from apps.user.test.utils import UserManager
-
-from django.test import TestCase
-from django.urls import reverse
-
-from rest_framework import status
-from rest_framework.test import APIClient
 
 
 # Create your tests here.
@@ -259,14 +258,14 @@ class EventActionTest(TestCase):
 
         # Update event as another user
         update_staff_event_url = reverse('event-staff-list', kwargs={'pk': self.event_id})
-        response = self.client.post(update_staff_event_url, {'staff_id': self.user2['id']})
+        response = self.client.post(update_staff_event_url, {'staff_email': self.user2['email']})
         self.assertEquals(response.status_code, status.HTTP_403_FORBIDDEN)
         self.assertTrue(response.data['errors'][0]['code'] == 'permission_denied')
 
     def test_remove_event_staffs(self):
         # Update event with new staff (another_user_detail)
         update_staff_event_url = reverse('event-staff-list', kwargs={'pk': self.event_id})
-        self.client.post(update_staff_event_url, {'staff_id': self.user2['id']})
+        self.client.post(update_staff_event_url, {'staff_email': self.user2['email']})
 
         # Remove new staff
         delete_staff_event_url = reverse('event-staff-detail',
@@ -278,7 +277,7 @@ class EventActionTest(TestCase):
     def test_remove_event_staffs_with_invalid_user(self):
         # Update event with new staff (another_user_detail)
         update_staff_event_url = reverse('event-staff-list', kwargs={'pk': self.event_id})
-        self.client.post(update_staff_event_url, {'staff_id': self.user2['id']})
+        self.client.post(update_staff_event_url, {'staff_email': self.user2['email']})
 
         # Login as user2
         self.user_manager.login_user(self.user2)
@@ -326,4 +325,85 @@ class EventActionTest(TestCase):
         verify_url = reverse('event-verify', kwargs={'pk': self.event_id})
 
         response = self.client.post(verify_url)
+        self.assertEquals(response.status_code, status.HTTP_401_UNAUTHORIZED)
+
+
+class EventJoinedUserTest(TestCase):
+    def setUp(self):
+        self.client = APIClient()
+        self.user_manager = UserManager(self.client)
+        self.event_manager = EventManager(self.client)
+
+        self.user1 = self.user_manager.register_user({
+            'email': 'user_cobersih@gmail.com',
+            'password': 'secretpass',
+            'name': 'user_cobersih',
+            'bio': 'user bio'
+        })
+        self.user2 = self.user_manager.register_user({
+            'email': 'user_cobersih2@gmail.com',
+            'password': 'secretpass',
+            'name': 'user_cobersih2',
+            'bio': 'user2 bio'
+        })
+        self.user3 = self.user_manager.register_user({
+            'email': 'user_cobersih3@gmail.com',
+            'password': 'secretpass',
+            'name': 'user_cobersih3',
+            'bio': 'user2 bio'
+        })
+        self.event_data = {
+            'name': 'event cobersih',
+            'description': 'deskripsi event cobersih',
+            'preparation': 'persiapan event cobersih',
+            'latitude': -6.121133006890128,
+            'longitude': 106.82900027912028,
+            'start_date': '2023-01-01',
+            'end_date': '2023-01-02'
+        }
+
+        # Create event as user1
+        self.user_manager.login_user(self.user1)
+        self.event_id = self.event_manager.create_event(self.event_data)
+        self.event_manager.verify_event(self.event_id)
+
+        # Add user2 as staff
+        self.event_manager.add_staff(self.event_id, self.user2['email'])
+
+        # user3 joined event
+        self.user_manager.login_user(self.user3)
+        self.event_manager.join_event(self.event_id)
+
+    def test_get_joined_user_as_host(self):
+        self.user_manager.login_user(self.user1)
+
+        event_joined_user_url = reverse('event-joined-user-list', kwargs={'pk': self.event_id})
+        response = self.client.get(event_joined_user_url)
+
+        self.assertEquals(response.status_code, status.HTTP_200_OK)
+        self.assertTrue(response.data['count'] == 1)
+
+    def test_get_joined_user_as_staff(self):
+        self.user_manager.login_user(self.user2)
+
+        event_joined_user_url = reverse('event-joined-user-list', kwargs={'pk': self.event_id})
+        response = self.client.get(event_joined_user_url)
+
+        self.assertEquals(response.status_code, status.HTTP_200_OK)
+        self.assertTrue(response.data['count'] == 1)
+
+    def test_get_joined_user_as_joined_user(self):
+        self.user_manager.login_user(self.user3)
+
+        event_joined_user_url = reverse('event-joined-user-list', kwargs={'pk': self.event_id})
+        response = self.client.get(event_joined_user_url)
+
+        self.assertEquals(response.status_code, status.HTTP_403_FORBIDDEN)
+
+    def test_get_joined_user_as_anon(self):
+        self.user_manager.logout_user()
+
+        event_joined_user_url = reverse('event-joined-user-list', kwargs={'pk': self.event_id})
+        response = self.client.get(event_joined_user_url)
+
         self.assertEquals(response.status_code, status.HTTP_401_UNAUTHORIZED)

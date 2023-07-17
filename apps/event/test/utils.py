@@ -46,3 +46,7 @@ class EventManager:
         event = Event.objects.get(pk=event_id)
         event.is_verified = False
         event.save()
+
+    def add_staff(self, event_id, staff_email):
+        update_staff_event_url = reverse('event-staff-list', kwargs={'pk': event_id})
+        self.client.post(update_staff_event_url, {'staff_email': staff_email})
