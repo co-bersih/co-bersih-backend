@@ -18,4 +18,7 @@ class ReportSerializer(serializers.ModelSerializer):
         ret = super().to_representation(instance)
         ret.pop('image')
 
+        if hasattr(instance, 'distance'):
+            ret['distance'] = round(instance.distance.km, 2)
+
         return ret

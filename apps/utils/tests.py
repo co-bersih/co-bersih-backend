@@ -142,3 +142,15 @@ class GeoLocationTest(TestCase):
         response = self.client.get(self.LOCATION_LIST_URL)
         self.assertEquals(response.status_code, status.HTTP_200_OK)
         self.assertTrue(response.data['count'] == 4)
+
+    def test_get_location_with_ordering_by_distance(self):
+        response = self.client.get(
+            f'{self.LOCATION_LIST_URL}?ordering=distance&lat={self.target_latitude}&lon={self.target_longitude}'
+        )
+        self.assertEquals(response.status_code, status.HTTP_200_OK)
+
+        result_data = response.data['results']
+        sorted_locations = sorted(result_data, key=lambda x: x['distance'])
+
+        for i in range(len(result_data)):
+            self.assertEquals(result_data[i]['distance'], sorted_locations[i]['distance'])
