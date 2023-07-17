@@ -10,6 +10,7 @@ from apps.user.test.utils import UserManager
 # Create your tests here.
 class CRUDReportTest(TestCase):
     REPORT_URL = reverse('report-list')
+
     def setUp(self):
         self.client = APIClient()
         self.user_manager = UserManager(self.client)
@@ -120,3 +121,22 @@ class CRUDReportTest(TestCase):
         self.user_manager.login_user(self.user2)
         response = self.client.patch(report_detail_url, updated_data)
         self.assertEquals(response.status_code, status.HTTP_403_FORBIDDEN)
+
+    def test_search_report_by_full_title(self):
+        # Create report
+        self.user_manager.login_user(self.user1)
+        self.client.post(self.REPORT_URL, self.report_data)
+
+        response = self.client.get(f'{self.REPORT_URL}?search={self.report_data["title"]}')
+        self.assertEquals(response.status_code, status.HTTP_200_OK)
+        self.assertTrue(response.data['count'] == 1)
+
+    def test_search_report_by_partial_title(self):
+        # Create report
+        self.user_manager.login_user(self.user1)
+        self.client.post(self.REPORT_URL, self.report_data)
+
+        response = self.client.get(
+            f'{self.REPORT_URL}?search={self.report_data["title"][:len(self.report_data["title"])-1]}')
+        self.assertEquals(response.status_code, status.HTTP_200_OK)
+        self.assertTrue(response.data['count'] == 1)
