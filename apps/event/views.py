@@ -83,8 +83,9 @@ class EventViewSet(viewsets.ModelViewSet):
         serializer.is_valid(raise_exception=True)
         staff = User.objects.get(email=staff_email)
 
+        # User can't be in joined_user and staffs at the same time
         if staff in event.joined_users.all():
-            raise ValidationError({'id': 'you already joined this event as user'}, code='user_already_joined_event')
+            event.joined_users.remove(staff)
 
         event.staffs.add(staff)
         return Response({'detail': 'staff successfully updated'}, status=status.HTTP_200_OK)

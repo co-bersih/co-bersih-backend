@@ -299,8 +299,12 @@ class EventActionTest(TestCase):
         # Login as host
         self.user_manager.login_user(self.user1)
         update_staff_event_url = reverse('event-staff-list', kwargs={'pk': self.event_id})
-        response = self.client.post(update_staff_event_url, {'staff_id': self.user2['id']})
-        self.assertEquals(response.status_code, status.HTTP_400_BAD_REQUEST)
+        response = self.client.post(update_staff_event_url, {'staff_email': self.user2['email']})
+        self.assertEquals(response.status_code, status.HTTP_200_OK)
+
+        event = Event.objects.get(pk=self.event_id)
+        self.assertTrue(len(event.staffs.all()) == 2)  # staffs: user1 (host) and user2
+        self.assertTrue(len(event.joined_users.all()) == 0)  # joined_user : None
 
     def test_verify_event_as_admin(self):
         admin_detail = self.user_manager.create_admin()
