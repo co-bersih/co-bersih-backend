@@ -44,6 +44,14 @@ class EventViewSet(viewsets.ModelViewSet):
             return EventDetailSerializer
         return EventSerializer
 
+    @property
+    def paginator(self):
+        query_params = self.request.query_params
+        if 'lon' in query_params and 'lat' in query_params\
+                and ('min' in query_params or 'max' in query_params):
+            return None
+        return super().paginator
+
     @action(detail=True, methods=['post'], permission_classes=[permissions.IsAdminUser],
             url_path='verify', url_name='verify')
     def verify_event(self, request, pk=None):

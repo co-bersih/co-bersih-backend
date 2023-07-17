@@ -20,3 +20,9 @@ class ReportViewSet(viewsets.ModelViewSet):
 
     def perform_create(self, serializer):
         serializer.save(reporter=self.request.user)
+
+    @property
+    def paginator(self):
+        if 'lon' in self.request.query_params and 'lat' in self.request.query_params:
+            return None
+        return super().paginator

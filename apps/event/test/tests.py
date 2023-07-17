@@ -155,6 +155,11 @@ class CRUDEventTest(TestCase):
         self.assertEquals(response.status_code, status.HTTP_204_NO_CONTENT)
         self.assertTrue(len(Event.objects.all()) == 0)
 
+    def test_no_pagination_for_distance_query(self):
+        distance_query_url = reverse('event-list')
+        response = self.client.get(f'{distance_query_url}?lon=0&lat=0&min=0')
+        self.assertIsInstance(response.data[0], dict)
+
 
 class EventActionTest(TestCase):
     def setUp(self):

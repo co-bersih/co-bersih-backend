@@ -36,8 +36,7 @@ class CRUDReportTest(TestCase):
         }
 
     def create_report(self, report_data):
-        report_url = reverse('report-list')
-        response = self.client.post(report_url, report_data)
+        response = self.client.post(self.REPORT_URL, report_data)
         report_id = response.data['id']
         return report_id
 
@@ -140,3 +139,12 @@ class CRUDReportTest(TestCase):
             f'{self.REPORT_URL}?search={self.report_data["title"][:len(self.report_data["title"])-1]}')
         self.assertEquals(response.status_code, status.HTTP_200_OK)
         self.assertTrue(response.data['count'] == 1)
+
+    def test_no_pagination_for_distance_query(self):
+        # Create report
+        self.user_manager.login_user(self.user1)
+        self.create_report(self.report_data)
+
+        # Get report based on distance
+        response = self.client.get(f'{self.REPORT_URL}?lon=0&lat=0&min=0')
+        self.assertIsInstance(response.data[0], dict)
