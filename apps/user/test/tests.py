@@ -1,5 +1,5 @@
 import uuid
-
+from apps.report.test.utils import ReportManager
 from apps.event.test.utils import EventManager
 from apps.user.models import User
 from django.test import TestCase
@@ -409,3 +409,33 @@ class UserEventStaffTest(TestCase):
         response = self.client.get(user_events_staff_url)
         self.assertEquals(response.status_code, status.HTTP_200_OK)
         self.assertTrue(response.data['count'] == 11)
+
+
+class UserReportTest(TestCase):
+
+    def setUp(self):
+        self.client = APIClient()
+        self.user_manager = UserManager(self.client)
+        self.report_manager = ReportManager(self.client)
+
+        self.user_detail = self.user_manager.register_user({
+            'email': 'user_cobersih@gmail.com',
+            'password': 'secretpass',
+            'name': 'user_cobersih',
+            'bio': 'user bio'
+        })
+        self.user_manager.login_user(self.user_detail)
+
+    def test_get_user_reports(self):
+        # Create report
+        self.report_manager.create_report({
+            'title': 'report cobersih',
+            'description': 'deskripsi report cobersih',
+            'latitude': -6.121133006890128,
+            'longitude': 106.82900027912028,
+        })
+
+        user_report_list_url = reverse('user-report-list', kwargs={'pk': self.user_detail['id']})
+        response = self.client.get(user_report_list_url)
+        self.assertEquals(response.status_code, status.HTTP_200_OK)
+        self.assertTrue(response.data['count'] == 1)

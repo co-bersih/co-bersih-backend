@@ -1,5 +1,7 @@
 from apps.event.models import Event
 from apps.event.serializers import EventSerializer
+from apps.report.models import Report
+from apps.report.serializers import ReportSerializer
 from rest_framework import permissions
 from rest_framework import status
 from rest_framework.exceptions import ValidationError
@@ -43,6 +45,17 @@ class UserView(RetrieveUpdateAPIView):
         return super().partial_update(request, *args, **kwargs)
 
 
+class CurrentUser(APIView):
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get(self, request):
+        """
+        Return current user details
+        """
+        serializer = UserSerializer(self.request.user)
+        return Response(serializer.data, status=status.HTTP_200_OK)
+
+
 class UserEventView(ListAPIView):
     serializer_class = EventSerializer
 
@@ -68,12 +81,9 @@ class UserEventStaffView(ListAPIView):
         return Event.objects.filter(staffs=pk)
 
 
-class CurrentUser(APIView):
-    permission_classes = [permissions.IsAuthenticated]
+class UserReportView(ListAPIView):
+    serializer_class = ReportSerializer
 
-    def get(self, request):
-        """
-        Return current user details
-        """
-        serializer = UserSerializer(self.request.user)
-        return Response(serializer.data, status=status.HTTP_200_OK)
+    def get_queryset(self):
+        pk = self.kwargs['pk']
+        return Report.objects.filter(reporter=pk)
