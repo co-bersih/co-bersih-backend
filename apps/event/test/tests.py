@@ -412,3 +412,89 @@ class EventJoinedUserTest(TestCase):
         response = self.client.get(event_joined_user_url)
 
         self.assertEquals(response.status_code, status.HTTP_401_UNAUTHORIZED)
+
+
+class EventFilterTest(TestCase):
+    EVENT_LIST_URL = reverse('event-list')
+    def setUp(self):
+        self.client = APIClient()
+        self.user_manager = UserManager(self.client)
+        self.event_manager = EventManager(self.client)
+
+        self.user = self.user_manager.register_user({
+            'email': 'user_cobersih@gmail.com',
+            'password': 'secretpass',
+            'name': 'user_cobersih',
+            'bio': 'user bio'
+        })
+
+        self.event_data1 = {
+            'name': 'event cobersih',
+            'description': 'deskripsi event cobersih',
+            'preparation': 'persiapan event cobersih',
+            'latitude': -6.121133006890128,
+            'longitude': 106.82900027912028,
+            'start_date': '2023-01-01',
+            'end_date': '2023-01-10'
+        }
+
+        self.event_data2 = {
+            'name': 'event cobersih2',
+            'description': 'deskripsi event cobersih2',
+            'preparation': 'persiapan event cobersih2',
+            'latitude': -6.121133006890128,
+            'longitude': 106.82900027912028,
+            'start_date': '2023-01-11',
+            'end_date': '2023-01-20'
+        }
+
+        # Create event1 (verified) and event2 (unverified)
+        self.user_manager.login_user(self.user)
+        self.event1_id = self.event_manager.create_event(self.event_data1)
+        self.event_manager.verify_event(self.event1_id)
+        self.event2_id = self.event_manager.create_event(self.event_data2)
+
+    def test_event_filter_by_start_date(self):
+        response = self.client.get(f'{self.EVENT_LIST_URL}?start_date=2023-01-01')
+        self.assertEquals(response.status_code, status.HTTP_200_OK)
+        self.assertTrue(response.data['count'] == 1)
+
+    def test_event_filter_by_start_date_lt(self):
+        response = self.client.get(f'{self.EVENT_LIST_URL}?start_date__lt=2023-01-01')
+        self.assertEquals(response.status_code, status.HTTP_200_OK)
+        self.assertTrue(response.data['count'] == 0)
+
+    def test_event_filter_by_start_date_lte(self):
+        response = self.client.get(f'{self.EVENT_LIST_URL}?start_date__lte=2023-01-01')
+        self.assertEquals(response.status_code, status.HTTP_200_OK)
+        self.assertTrue(response.data['count'] == 1)
+
+    def test_event_filter_by_end_date(self):
+        response = self.client.get(f'{self.EVENT_LIST_URL}?end_date=2023-01-10')
+        self.assertEquals(response.status_code, status.HTTP_200_OK)
+        self.assertTrue(response.data['count'] == 1)
+
+    def test_event_filter_by_end_date_gt(self):
+        response = self.client.get(f'{self.EVENT_LIST_URL}?end_date__gt=2023-01-10')
+        self.assertEquals(response.status_code, status.HTTP_200_OK)
+        self.assertTrue(response.data['count'] == 1)
+
+    def test_end_date_gt_and_verified(self):
+        response = self.client.get(f'{self.EVENT_LIST_URL}?is_verified=true&end_date__gt=2023-01-10')
+        self.assertEquals(response.status_code, status.HTTP_200_OK)
+        self.assertTrue(response.data['count'] == 0)
+
+    def test_end_date_gte_and_verified(self):
+        response = self.client.get(f'{self.EVENT_LIST_URL}?is_verified=true&end_date__gte=2023-01-10')
+        self.assertEquals(response.status_code, status.HTTP_200_OK)
+        self.assertTrue(response.data['count'] == 1)
+
+    def test_end_date_gt_and_unverified(self):
+        response = self.client.get(f'{self.EVENT_LIST_URL}?is_verified=false&end_date__gt=2023-01-10')
+        self.assertEquals(response.status_code, status.HTTP_200_OK)
+        self.assertTrue(response.data['count'] == 1)
+
+    def test_end_date_gte_and_unverified(self):
+        response = self.client.get(f'{self.EVENT_LIST_URL}?is_verified=false&end_date__gte=2023-01-10')
+        self.assertEquals(response.status_code, status.HTTP_200_OK)
+        self.assertTrue(response.data['count'] == 1)

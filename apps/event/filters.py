@@ -7,6 +7,6 @@ class EventFilter(filters.FilterSet):
         model = Event
         fields = {
             'is_verified': ['exact'],
-            'start_date': ['lte', 'lt', 'gte', 'gt'],
-            'end_date': ['lte', 'lt', 'gte', 'gt'],
+            'start_date': ['exact', 'lte', 'lt', 'gte', 'gt'],
+            'end_date': ['exact', 'lte', 'lt', 'gte', 'gt'],
         }
