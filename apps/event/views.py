@@ -13,7 +13,7 @@ from apps.utils.filters import GeoPointFilter
 from .models import Event
 from .permissions import IsHostOrReadOnly, IsVerifiedEvent, IsStaff
 from .serializers import EventSerializer, EventDetailSerializer, StaffSerializer
-
+from .filters import EventFilter
 
 # Create your views here.
 
@@ -33,7 +33,7 @@ class EventViewSet(viewsets.ModelViewSet):
     http_method_names = ['get', 'head', 'post', 'patch', 'delete']
     filter_backends = [filters.SearchFilter, DjangoFilterBackend, GeoPointFilter]
     search_fields = ['name']
-    filterset_fields = ['is_verified']
+    filterset_class = EventFilter
 
     def perform_create(self, serializer):
         event = serializer.save(host=self.request.user)
