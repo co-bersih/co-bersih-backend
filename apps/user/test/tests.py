@@ -129,6 +129,29 @@ class CurrentUserDetailTest(TestCase):
         self.assertEquals(response.status_code, status.HTTP_401_UNAUTHORIZED)
         self.assertTrue(response.data['errors'][0]['code'] == 'not_authenticated')
 
+    def test_current_user_non_admin(self):
+        response = self.client.get(self.CURRENT_USER_DETAIL_URL)
+        self.assertEquals(response.status_code, status.HTTP_200_OK)
+        self.assertFalse(response.data['is_admin'])
+
+    def test_current_user_admin(self):
+        admin_data = {
+            'email': 'admin@mail.com',
+            'password': 'admin',
+            'name': 'admin',
+            'bio': 'admin bio'
+        }
+        User.objects.create_superuser(**admin_data)
+
+        self.user_manager.login_user({
+            'email': admin_data['email'],
+            'password': admin_data['password'],
+        })
+
+        response = self.client.get(self.CURRENT_USER_DETAIL_URL)
+        self.assertEquals(response.status_code, status.HTTP_200_OK)
+        self.assertTrue(response.data['is_admin'])
+
 
 class UserDetailTest(TestCase):
     REGISTER_URL = reverse('user-register')

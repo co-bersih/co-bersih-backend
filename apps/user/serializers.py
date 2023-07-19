@@ -38,6 +38,13 @@ class UserSerializer(serializers.ModelSerializer):
         return ret
 
 
+class CurrentUserSerializer(serializers.ModelSerializer):
+    id = serializers.ReadOnlyField()
+    class Meta:
+        model = User
+        fields = ['id', 'email', 'name', 'date_joined', 'bio', 'profile_image_url', 'is_admin']
+
+
 class ChangePasswordSerializer(serializers.Serializer):
     old_password = serializers.CharField(
         style={'input_type': 'password'},

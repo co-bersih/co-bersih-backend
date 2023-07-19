@@ -11,7 +11,7 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 from .models import User
 from .permissions import IsCurrentUserOrReadOnly
-from .serializers import UserSerializer, ChangePasswordSerializer
+from .serializers import UserSerializer, CurrentUserSerializer, ChangePasswordSerializer
 
 
 # Create your views here.
@@ -52,7 +52,7 @@ class CurrentUser(APIView):
         """
         Return current user details
         """
-        serializer = UserSerializer(self.request.user)
+        serializer = CurrentUserSerializer(self.request.user)
         return Response(serializer.data, status=status.HTTP_200_OK)
 
 
