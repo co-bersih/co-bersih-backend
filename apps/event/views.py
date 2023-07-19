@@ -14,6 +14,8 @@ from .models import Event
 from .permissions import IsHostOrReadOnly, IsVerifiedEvent, IsStaff
 from .serializers import EventSerializer, EventDetailSerializer, StaffSerializer
 from .filters import EventFilter
+from apps.report.models import Report
+
 
 # Create your views here.
 
@@ -39,6 +41,15 @@ class EventViewSet(viewsets.ModelViewSet):
         event = serializer.save(host=self.request.user)
         event.staffs.add(self.request.user)
 
+        if 'report_ref_id' not in self.request.data:
+            return
+
+        try:
+            report = Report.objects.get(pk=self.request.data['report_ref_id'])
+            report.delete()
+        except:
+            return
+
     def get_serializer_class(self):
         if self.action == 'retrieve':
             return EventDetailSerializer
@@ -47,7 +58,7 @@ class EventViewSet(viewsets.ModelViewSet):
     @property
     def paginator(self):
         query_params = self.request.query_params
-        if 'lon' in query_params and 'lat' in query_params\
+        if 'lon' in query_params and 'lat' in query_params \
                 and ('min' in query_params or 'max' in query_params):
             return None
         return super().paginator

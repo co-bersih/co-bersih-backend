@@ -7,6 +7,8 @@ from apps.event.models import Event
 from apps.event.test.utils import EventManager
 from apps.user.models import User
 from apps.user.test.utils import UserManager
+from apps.report.test.utils import ReportManager
+from apps.report.models import Report
 
 
 # Create your tests here.
@@ -16,6 +18,7 @@ class CRUDEventTest(TestCase):
     def setUp(self):
         self.client = APIClient()
         self.user_manager = UserManager(self.client)
+        self.report_manager = ReportManager(self.client)
 
         self.user1 = self.user_manager.register_user({
             'email': 'user_cobersih@gmail.com',
@@ -65,6 +68,70 @@ class CRUDEventTest(TestCase):
         response = self.client.get(self.EVENT_LIST_URL)
         self.assertEquals(response.status_code, status.HTTP_200_OK)
         self.assertEquals(response.data['count'], initial + total)
+
+    def test_create_event_with_report_ref(self):
+        report_data = {
+            'title': 'report cobersih',
+            'description': 'deskripsi report cobersih',
+            'latitude': -6.121133006890128,
+            'longitude': 106.82900027912028,
+        }
+
+        report_id = self.report_manager.create_report(report_data)
+
+        new_event_data = {
+            'name': 'event cobersih',
+            'description': 'deskripsi event cobersih',
+            'preparation': 'persiapan event cobersih',
+            'latitude': -6.121133006890128,
+            'longitude': 106.82900027912028,
+            'start_date': '2023-01-01',
+            'end_date': '2023-01-02',
+            'report_ref_id': report_id,
+        }
+
+        response = self.client.post(self.EVENT_LIST_URL, new_event_data)
+        event_id = response.data['id']
+
+        self.assertEquals(response.status_code, status.HTTP_201_CREATED)
+        self.assertTrue(Event.objects.filter(pk=event_id).exists())
+        self.assertFalse(Report.objects.filter(pk=report_id).exists())
+
+    def test_create_event_with_invalid_report_ref(self):
+        new_event_data = {
+            'name': 'event cobersih',
+            'description': 'deskripsi event cobersih',
+            'preparation': 'persiapan event cobersih',
+            'latitude': -6.121133006890128,
+            'longitude': 106.82900027912028,
+            'start_date': '2023-01-01',
+            'end_date': '2023-01-02',
+            'report_ref_id': '00000000-00000000-00000000-00000000',
+        }
+
+        response = self.client.post(self.EVENT_LIST_URL, new_event_data)
+        event_id = response.data['id']
+
+        self.assertEquals(response.status_code, status.HTTP_201_CREATED)
+        self.assertTrue(Event.objects.filter(pk=event_id).exists())
+
+    def test_create_event_with_invalid_uuid_report_ref(self):
+        new_event_data = {
+            'name': 'event cobersih',
+            'description': 'deskripsi event cobersih',
+            'preparation': 'persiapan event cobersih',
+            'latitude': -6.121133006890128,
+            'longitude': 106.82900027912028,
+            'start_date': '2023-01-01',
+            'end_date': '2023-01-02',
+            'report_ref_id': 'a',
+        }
+
+        response = self.client.post(self.EVENT_LIST_URL, new_event_data)
+        event_id = response.data['id']
+
+        self.assertEquals(response.status_code, status.HTTP_201_CREATED)
+        self.assertTrue(Event.objects.filter(pk=event_id).exists())
 
     def test_find_list_verified_event_by_name(self):
         total = 10
@@ -416,6 +483,7 @@ class EventJoinedUserTest(TestCase):
 
 class EventFilterTest(TestCase):
     EVENT_LIST_URL = reverse('event-list')
+
     def setUp(self):
         self.client = APIClient()
         self.user_manager = UserManager(self.client)
