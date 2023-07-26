@@ -40,6 +40,7 @@ class UserSerializer(serializers.ModelSerializer):
 
 class CurrentUserSerializer(serializers.ModelSerializer):
     id = serializers.ReadOnlyField()
+
     class Meta:
         model = User
         fields = ['id', 'email', 'name', 'date_joined', 'bio', 'profile_image_url', 'is_admin']

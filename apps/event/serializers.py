@@ -1,7 +1,7 @@
 from apps.user.models import User
 from apps.user.serializers import UserSerializer
 from rest_framework import serializers
-from .models import Event
+from .models import Event, Payment
 
 
 class EventSerializer(serializers.ModelSerializer):
@@ -39,12 +39,13 @@ class EventDetailSerializer(EventSerializer):
         many=True,
         read_only=True,
         slug_field='email'
-     )
+    )
     supports = serializers.PrimaryKeyRelatedField(many=True, read_only=True)
+    payment_url = serializers.ReadOnlyField()
 
     class Meta(EventSerializer.Meta):
         model = Event
-        fields = EventSerializer.Meta.fields + ['staffs', 'supports']
+        fields = EventSerializer.Meta.fields + ['staffs', 'supports', 'payment_url']
 
 
 class StaffSerializer(serializers.Serializer):
@@ -56,3 +57,9 @@ class StaffSerializer(serializers.Serializer):
         except User.DoesNotExist:
             raise serializers.ValidationError('staff_email not found', code='invalid_id')
         return value
+
+
+class PaymentSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Payment
+        fields = '__all__'

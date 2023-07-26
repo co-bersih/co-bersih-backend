@@ -33,8 +33,10 @@ SECRET_KEY = env('SECRET_KEY')
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = env('DEBUG')
 
-CSRF_ALLOWED_ORIGINS = ['https://co-bersih-backend.fly.dev', 'https://cobersihapi.veivelp.com', 'https://cobersih.servehttp.com']
-CSRF_TRUSTED_ORIGINS = ['https://co-bersih-backend.fly.dev', 'https://cobersihapi.veivelp.com', 'https://cobersih.servehttp.com']
+CSRF_ALLOWED_ORIGINS = ['https://co-bersih-backend.fly.dev', 'https://cobersihapi.veivelp.com',
+                        'https://cobersih.servehttp.com']
+CSRF_TRUSTED_ORIGINS = ['https://co-bersih-backend.fly.dev', 'https://cobersihapi.veivelp.com',
+                        'https://cobersih.servehttp.com']
 
 CORS_ALLOWED_ORIGINS = [
     'http://localhost:3000',
@@ -63,15 +65,17 @@ CORS_ALLOW_HEADERS = [
     "pragma",
 ]
 
-ALLOWED_HOSTS = [
-    'co-bersih-backend.fly.dev',
-    '127.0.0.1',
-    'localhost',
-    'cobersihapi.veivelp.com', 
-    'cobersih.servehttp.com'
-]
-if env('ENVIRONMENT').lower() != 'prod':
-    ALLOWED_HOSTS = ['*']
+# ALLOWED_HOSTS = [
+#     'co-bersih-backend.fly.dev',
+#     '127.0.0.1',
+#     'localhost',
+#     'cobersihapi.veivelp.com',
+#     'cobersih.servehttp.com'
+# ]
+# if env('ENVIRONMENT').lower() != 'prod':
+#     ALLOWED_HOSTS = ['*']
+
+ALLOWED_HOSTS = ['*']
 
 # Application definition
 
@@ -233,6 +237,10 @@ cloudinary.config(
 # GeoDjango
 if (env('GDAL_LIBRARY_PATH', default=False)):
     GDAL_LIBRARY_PATH = env('GDAL_LIBRARY_PATH')
-    
+
 if (env('GEOS_LIBRARY_PATH', default=False)):
     GEOS_LIBRARY_PATH = env('GEOS_LIBRARY_PATH')
+
+# Flip for bussiness
+FLIP_API_SECRET_KEY = env('FLIP_API_SECRET_KEY')
+FLIP_BASE_URL = env('FLIP_BASE_URL')
