@@ -1,3 +1,5 @@
+import json
+
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import filters
 from rest_framework import status
@@ -6,15 +8,16 @@ from rest_framework.decorators import api_view, action
 from rest_framework.exceptions import ValidationError
 from rest_framework.generics import ListAPIView
 from rest_framework.response import Response
+from rest_framework.parsers import JSONParser
 
+from apps.report.models import Report
 from apps.user.models import User
 from apps.user.serializers import UserSerializer
 from apps.utils.filters import GeoPointFilter
-from .models import Event
-from .permissions import IsHostOrReadOnly, IsVerifiedEvent, IsStaff
-from .serializers import EventSerializer, EventDetailSerializer, StaffSerializer
 from .filters import EventFilter
-from apps.report.models import Report
+from .models import Event, Payment
+from .permissions import IsHostOrReadOnly, IsVerifiedEvent, IsStaff, IsFlipForBusiness
+from .serializers import EventSerializer, EventDetailSerializer, StaffSerializer
 
 
 # Create your views here.
@@ -124,6 +127,19 @@ class EventViewSet(viewsets.ModelViewSet):
 
         event.staffs.remove(staff)
         return Response({'detail': 'staff successfully removed'}, status=status.HTTP_200_OK)
+
+    @action(detail=False, methods=['post'], url_path='accept-payment', url_name='accept-payment',
+            permission_classes=[IsFlipForBusiness])
+    def accept_payment(self, request):
+        data = json.loads(request.data['data'])
+        payment = Payment.objects.get(pk=int(data['bill_link_id']))
+        event = payment.event
+
+        if data['status'] == 'SUCCESSFUL':
+            event.total_donation += data['amount']
+            event.save()
+
+        return Response(status=status.HTTP_200_OK)
 
 
 class EventJoinedUserView(ListAPIView):

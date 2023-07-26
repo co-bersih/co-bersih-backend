@@ -50,6 +50,7 @@ class Event(GeoLocationModel):
     supports = models.ManyToManyField(User, related_name='events_support')
     is_verified = models.BooleanField(default=False)
     payment = models.OneToOneField(Payment, on_delete=models.CASCADE, null=True, blank=True)
+    total_donation = models.IntegerField(default=0)
 
     class Meta:
         unique_together = ['id', 'is_deleted']

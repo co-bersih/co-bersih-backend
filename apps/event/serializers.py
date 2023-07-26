@@ -45,7 +45,7 @@ class EventDetailSerializer(EventSerializer):
 
     class Meta(EventSerializer.Meta):
         model = Event
-        fields = EventSerializer.Meta.fields + ['staffs', 'supports', 'payment_url']
+        fields = EventSerializer.Meta.fields + ['staffs', 'supports', 'payment_url', 'total_donation']
 
 
 class StaffSerializer(serializers.Serializer):

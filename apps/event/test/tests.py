@@ -1,9 +1,12 @@
+import json
+
+from django.conf import settings
 from django.test import TestCase
 from django.urls import reverse
 from rest_framework import status
 from rest_framework.test import APIClient
 
-from apps.event.models import Event
+from apps.event.models import Event, Payment
 from apps.event.test.utils import EventManager
 from apps.user.models import User
 from apps.user.test.utils import UserManager
@@ -229,6 +232,8 @@ class CRUDEventTest(TestCase):
 
 
 class EventActionTest(TestCase):
+    ACCEPT_PAYMENT_URL = reverse('event-accept-payment')
+
     def setUp(self):
         self.client = APIClient()
         self.user_manager = UserManager(self.client)
@@ -260,6 +265,27 @@ class EventActionTest(TestCase):
         }
         self.event_id = self.event_manager.create_event(self.event_data)
         self.event_manager.verify_event(self.event_id)
+
+        self.payment_data = {
+            "link_id": 1,
+            "link_url": "flip.id/pwf-sandbox/$test/#test",
+            "title": "test2",
+            "type": "MULTIPLE",
+            "amount": 0,
+            "redirect_url": "",
+            "expired_date": None,
+            "created_from": "API",
+            "status": "ACTIVE",
+            "is_address_required": 0,
+            "is_phone_number_required": 0,
+            "step": 1
+        }
+
+        # Add payment to event
+        payment = Payment.objects.create(**self.payment_data)
+        event = Event.objects.get(pk=self.event_id)
+        event.payment = payment
+        event.save()
 
     def test_join_verified_event(self):
         self.user_manager.login_user(self.user2)
@@ -398,6 +424,77 @@ class EventActionTest(TestCase):
 
         response = self.client.post(verify_url)
         self.assertEquals(response.status_code, status.HTTP_401_UNAUTHORIZED)
+
+    def test_accept_payment(self):
+        payload = {
+            "token": settings.FLIP_VALIDATION_TOKEN,
+            "data": json.dumps({
+                "id": "FT1",
+                "bill_link": "flip.id/pwf-sandbox/$test/#test",
+                "bill_link_id": self.payment_data['link_id'],
+                "bill_title": "Cimol Goreng",
+                "sender_name": "Jon Doe",
+                "sender_bank": "bni",
+                "sender_email": "email@email.com",
+                "amount": 10000,
+                "status": "SUCCESSFUL",
+                "sender_bank_type": "bank_account",
+                "created_at": "2021-11-29 10:10:10"
+            })
+        }
+
+        response = self.client.post(self.ACCEPT_PAYMENT_URL, payload)
+        self.assertEquals(response.status_code, status.HTTP_200_OK)
+
+        event = Event.objects.get(pk=self.event_id)
+        data = json.loads(payload['data'])
+        self.assertEquals(event.total_donation, data['amount'])
+
+    def test_accept_payment_with_invalid_token(self):
+        payload = {
+            "token": "<invalid_token>",
+            "data": json.dumps({
+                "id": "FT1",
+                "bill_link": "flip.id/pwf-sandbox/$test/#test",
+                "bill_link_id": self.payment_data['link_id'],
+                "bill_title": "Cimol Goreng",
+                "sender_name": "Jon Doe",
+                "sender_bank": "bni",
+                "sender_email": "email@email.com",
+                "amount": 10000,
+                "status": "SUCCESSFUL",
+                "sender_bank_type": "bank_account",
+                "created_at": "2021-11-29 10:10:10"
+            })
+        }
+
+        response = self.client.post(self.ACCEPT_PAYMENT_URL, payload)
+        self.assertEquals(response.status_code, status.HTTP_403_FORBIDDEN)
+
+    def test_accept_payment_with_FAILED_status(self):
+        payload = {
+            "token": settings.FLIP_VALIDATION_TOKEN,
+            "data": json.dumps({
+                "id": "FT1",
+                "bill_link": "flip.id/pwf-sandbox/$test/#test",
+                "bill_link_id": self.payment_data['link_id'],
+                "bill_title": "Cimol Goreng",
+                "sender_name": "Jon Doe",
+                "sender_bank": "bni",
+                "sender_email": "email@email.com",
+                "amount": 10000,
+                "status": "FAILED",
+                "sender_bank_type": "bank_account",
+                "created_at": "2021-11-29 10:10:10"
+            })
+        }
+
+        response = self.client.post(self.ACCEPT_PAYMENT_URL, payload)
+        self.assertEquals(response.status_code, status.HTTP_200_OK)
+
+        event = Event.objects.get(pk=self.event_id)
+        data = json.loads(payload['data'])
+        self.assertNotEquals(event.total_donation, data['amount'])
 
 
 class EventJoinedUserTest(TestCase):

@@ -241,6 +241,7 @@ if (env('GDAL_LIBRARY_PATH', default=False)):
 if (env('GEOS_LIBRARY_PATH', default=False)):
     GEOS_LIBRARY_PATH = env('GEOS_LIBRARY_PATH')
 
-# Flip for bussiness
+# Flip for business
 FLIP_API_SECRET_KEY = env('FLIP_API_SECRET_KEY')
 FLIP_BASE_URL = env('FLIP_BASE_URL')
+FLIP_VALIDATION_TOKEN = env('FLIP_VALIDATION_TOKEN').strip()
