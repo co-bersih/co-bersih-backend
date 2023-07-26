@@ -13,6 +13,11 @@ class IsHostOrReadOnly(permissions.BasePermission):
         return obj.host == request.user
 
 
+class IsHost(permissions.BasePermission):
+    def has_object_permission(self, request, view, obj):
+        return obj.host == request.user
+
+
 class IsStaff(permissions.BasePermission):
 
     def has_permission(self, request, view):

@@ -18,7 +18,7 @@ from apps.utils.filters import GeoPointFilter
 from .filters import EventFilter
 from .models import Event
 from .models import Payment
-from .permissions import IsHostOrReadOnly, IsVerifiedEvent, IsStaff, IsFlipForBusiness
+from .permissions import IsHostOrReadOnly, IsVerifiedEvent, IsStaff, IsFlipForBusiness, IsHost
 from .serializers import EventSerializer, EventDetailSerializer, StaffSerializer
 from .serializers import PaymentSerializer
 
@@ -171,6 +171,15 @@ class EventViewSet(viewsets.ModelViewSet):
             event.save()
 
         return Response(status=status.HTTP_200_OK)
+
+    @action(detail=True, methods=['get'], url_path='account', url_name='account-detail',
+            permission_classes=[permissions.IsAuthenticated, IsHost])
+    def get_event_account_detail(self, request, pk, **kwargs):
+        event = self.get_object()
+        return Response({
+            'account_number': event.account_number,
+            'bank_code': event.bank_code
+        })
 
 
 class EventJoinedUserView(ListAPIView):

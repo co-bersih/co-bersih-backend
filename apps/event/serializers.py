@@ -9,11 +9,13 @@ class EventSerializer(serializers.ModelSerializer):
     host = UserSerializer(read_only=True)
     total_participant = serializers.ReadOnlyField()
     image_url = serializers.ReadOnlyField()
+    account_number = serializers.CharField(write_only=True, required=False)
+    bank_code = serializers.CharField(write_only=True, required=False)
 
     class Meta:
         model = Event
         fields = ['id', 'host', 'name', 'total_participant', 'description', 'preparation', 'image', 'image_url',
-                  'latitude', 'longitude', 'start_date', 'end_date', 'is_verified']
+                  'latitude', 'longitude', 'start_date', 'end_date', 'is_verified', 'account_number', 'bank_code']
 
     def validate(self, data):
         """

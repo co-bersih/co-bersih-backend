@@ -59,6 +59,16 @@ class CRUDEventTest(TestCase):
         event.is_verified = True
         event.save()
 
+    def test_create_event_as_event_account(self):
+        self.event_data.update(
+            {
+                'account_number': '1122333300',
+                'bank_code': 'bni'
+            }
+        )
+        response = self.client.post(self.EVENT_LIST_URL, self.event_data)
+        self.assertEquals(response.status_code, status.HTTP_201_CREATED)
+
     def test_create_list_verified_event(self):
         initial = len(Event.objects.all())
         total = 10
@@ -72,7 +82,7 @@ class CRUDEventTest(TestCase):
         self.assertEquals(response.status_code, status.HTTP_200_OK)
         self.assertEquals(response.data['count'], initial + total)
 
-    def test_create_event_with_report_ref(self):
+    def test_create_event_as_report_ref(self):
         report_data = {
             'title': 'report cobersih',
             'description': 'deskripsi report cobersih',
@@ -100,7 +110,7 @@ class CRUDEventTest(TestCase):
         self.assertTrue(Event.objects.filter(pk=event_id).exists())
         self.assertFalse(Report.objects.filter(pk=report_id).exists())
 
-    def test_create_event_with_invalid_report_ref(self):
+    def test_create_event_as_invalid_report_ref(self):
         new_event_data = {
             'name': 'event cobersih',
             'description': 'deskripsi event cobersih',
@@ -118,7 +128,7 @@ class CRUDEventTest(TestCase):
         self.assertEquals(response.status_code, status.HTTP_201_CREATED)
         self.assertTrue(Event.objects.filter(pk=event_id).exists())
 
-    def test_create_event_with_invalid_uuid_report_ref(self):
+    def test_create_event_as_invalid_uuid_report_ref(self):
         new_event_data = {
             'name': 'event cobersih',
             'description': 'deskripsi event cobersih',
@@ -169,7 +179,7 @@ class CRUDEventTest(TestCase):
         response = self.client.post(self.EVENT_LIST_URL, self.event_data)
         self.assertEquals(response.status_code, status.HTTP_401_UNAUTHORIZED)
 
-    def test_create_event_with_invalid_date(self):
+    def test_create_event_as_invalid_date(self):
         self.event_data['start_date'] = '2023-01-03'
         response = self.client.post(self.EVENT_LIST_URL, self.event_data)
         self.assertEquals(response.status_code, status.HTTP_400_BAD_REQUEST)
@@ -218,6 +228,46 @@ class CRUDEventTest(TestCase):
         response = self.client.patch(event_detail_url, updated_data)
         self.assertEquals(response.status_code, status.HTTP_400_BAD_REQUEST)
         self.assertTrue(response.data['errors'][0]['code'] == 'invalid_date')
+
+    def test_patch_event_account(self):
+        event_detail_url = reverse('event-detail', kwargs={'pk': self.event_id})
+
+        updated_data = {
+            'account_number': '1122333301',
+            'bank_code': 'bca'
+        }
+
+        response = self.client.patch(event_detail_url, updated_data)
+        self.assertEquals(response.status_code, status.HTTP_200_OK)
+
+        event = Event.objects.get(pk=self.event_id)
+        self.assertEquals(event.account_number, updated_data['account_number'])
+        self.assertEquals(event.bank_code, updated_data['bank_code'])
+
+    def test_patch_event_account_as_anon(self):
+        self.user_manager.logout_user()
+        event_detail_url = reverse('event-detail', kwargs={'pk': self.event_id})
+
+        updated_data = {
+            'account_number': '1122333301',
+            'bank_code': 'bca'
+        }
+
+        response = self.client.patch(event_detail_url, updated_data)
+        self.assertEquals(response.status_code, status.HTTP_401_UNAUTHORIZED)
+
+    def test_path_event_account_as_another_user(self):
+        self.user_manager.login_user(self.user2)
+
+        event_detail_url = reverse('event-detail', kwargs={'pk': self.event_id})
+
+        updated_data = {
+            'account_number': '1122333301',
+            'bank_code': 'bca'
+        }
+
+        response = self.client.patch(event_detail_url, updated_data)
+        self.assertEquals(response.status_code, status.HTTP_403_FORBIDDEN)
 
     def test_delete_event(self):
         event_detail_url = reverse('event-detail', kwargs={'pk': self.event_id})
@@ -345,13 +395,13 @@ class EventActionTest(TestCase):
         self.assertEquals(response.status_code, status.HTTP_200_OK)
         self.assertTrue(len(User.objects.get(pk=self.user2['id']).events_staff.all()) == 1)
 
-    def test_update_event_staffs_with_invalid_id(self):
+    def test_update_event_staffs_as_invalid_id(self):
         update_staff_event_url = reverse('event-staff-list', kwargs={'pk': self.event_id})
         response = self.client.post(update_staff_event_url, {'staff_email': 'invalid@mail.com'})
         self.assertEquals(response.status_code, status.HTTP_400_BAD_REQUEST)
         self.assertTrue(response.data['errors'][0]['attr'] == 'staff_email')
 
-    def test_update_event_staffs_with_invalid_user(self):
+    def test_update_event_staffs_as_invalid_user(self):
         self.user_manager.login_user(self.user2)
 
         # Update event as another user
@@ -372,7 +422,7 @@ class EventActionTest(TestCase):
         self.assertEquals(response.status_code, status.HTTP_200_OK)
         self.assertTrue(len(User.objects.get(pk=self.user2['id']).events_staff.all()) == 0)
 
-    def test_remove_event_staffs_with_invalid_user(self):
+    def test_remove_event_staffs_as_invalid_user(self):
         # Update event with new staff (another_user_detail)
         update_staff_event_url = reverse('event-staff-list', kwargs={'pk': self.event_id})
         self.client.post(update_staff_event_url, {'staff_email': self.user2['email']})
@@ -450,7 +500,7 @@ class EventActionTest(TestCase):
         data = json.loads(payload['data'])
         self.assertEquals(event.total_donation, data['amount'])
 
-    def test_accept_payment_with_invalid_token(self):
+    def test_accept_payment_as_invalid_token(self):
         payload = {
             "token": "<invalid_token>",
             "data": json.dumps({
@@ -471,7 +521,7 @@ class EventActionTest(TestCase):
         response = self.client.post(self.ACCEPT_PAYMENT_URL, payload)
         self.assertEquals(response.status_code, status.HTTP_403_FORBIDDEN)
 
-    def test_accept_payment_with_FAILED_status(self):
+    def test_accept_payment_as_FAILED_status(self):
         payload = {
             "token": settings.FLIP_VALIDATION_TOKEN,
             "data": json.dumps({
@@ -495,6 +545,23 @@ class EventActionTest(TestCase):
         event = Event.objects.get(pk=self.event_id)
         data = json.loads(payload['data'])
         self.assertNotEquals(event.total_donation, data['amount'])
+
+    def test_get_event_account(self):
+        event_detail_url = reverse('event-account-detail', kwargs={'pk': self.event_id})
+        response = self.client.get(event_detail_url)
+        self.assertEquals(response.status_code, status.HTTP_200_OK)
+
+    def test_get_event_account_as_anon(self):
+        self.user_manager.logout_user()
+        event_detail_url = reverse('event-account-detail', kwargs={'pk': self.event_id})
+        response = self.client.get(event_detail_url)
+        self.assertEquals(response.status_code, status.HTTP_401_UNAUTHORIZED)
+
+    def test_get_event_account_as_another_user(self):
+        self.user_manager.login_user(self.user2)
+        event_detail_url = reverse('event-account-detail', kwargs={'pk': self.event_id})
+        response = self.client.get(event_detail_url)
+        self.assertEquals(response.status_code, status.HTTP_403_FORBIDDEN)
 
 
 class EventJoinedUserTest(TestCase):
