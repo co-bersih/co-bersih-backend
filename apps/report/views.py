@@ -23,6 +23,8 @@ class ReportViewSet(viewsets.ModelViewSet):
 
     @property
     def paginator(self):
-        if 'lon' in self.request.query_params and 'lat' in self.request.query_params:
+        query_params = self.request.query_params
+        if 'lon' in query_params and 'lat' in query_params \
+                and ('min' in query_params or 'max' in query_params):
             return None
         return super().paginator
