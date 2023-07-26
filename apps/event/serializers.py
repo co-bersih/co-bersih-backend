@@ -9,12 +9,11 @@ class EventSerializer(serializers.ModelSerializer):
     host = UserSerializer(read_only=True)
     total_participant = serializers.ReadOnlyField()
     image_url = serializers.ReadOnlyField()
-    payment_url = serializers.ReadOnlyField()
 
     class Meta:
         model = Event
         fields = ['id', 'host', 'name', 'total_participant', 'description', 'preparation', 'image', 'image_url',
-                  'latitude', 'longitude', 'start_date', 'end_date', 'is_verified', 'payment_url']
+                  'latitude', 'longitude', 'start_date', 'end_date', 'is_verified']
 
     def validate(self, data):
         """
@@ -42,10 +41,11 @@ class EventDetailSerializer(EventSerializer):
         slug_field='email'
     )
     supports = serializers.PrimaryKeyRelatedField(many=True, read_only=True)
+    payment_url = serializers.ReadOnlyField()
 
     class Meta(EventSerializer.Meta):
         model = Event
-        fields = EventSerializer.Meta.fields + ['staffs', 'supports']
+        fields = EventSerializer.Meta.fields + ['staffs', 'supports', 'payment_url']
 
 
 class StaffSerializer(serializers.Serializer):
