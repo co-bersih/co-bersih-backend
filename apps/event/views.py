@@ -1,5 +1,7 @@
 import json
 
+import requests
+from django.conf import settings
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import filters
 from rest_framework import status
@@ -8,16 +10,17 @@ from rest_framework.decorators import api_view, action
 from rest_framework.exceptions import ValidationError
 from rest_framework.generics import ListAPIView
 from rest_framework.response import Response
-from rest_framework.parsers import JSONParser
 
 from apps.report.models import Report
 from apps.user.models import User
 from apps.user.serializers import UserSerializer
 from apps.utils.filters import GeoPointFilter
 from .filters import EventFilter
-from .models import Event, Payment
+from .models import Event
+from .models import Payment
 from .permissions import IsHostOrReadOnly, IsVerifiedEvent, IsStaff, IsFlipForBusiness
 from .serializers import EventSerializer, EventDetailSerializer, StaffSerializer
+from .serializers import PaymentSerializer
 
 
 # Create your views here.
@@ -73,8 +76,36 @@ class EventViewSet(viewsets.ModelViewSet):
         event.is_verified = True
         event.save()
 
+        # Generate bill for verified event
+        self.set_event_payment(event)
         serializer = self.get_serializer(event)
         return Response(serializer.data, status=status.HTTP_200_OK)
+
+    def set_event_payment(self, event):
+        bill = self.create_bill(event)
+
+        # Create payment
+        serializer = PaymentSerializer(data=bill)
+        serializer.is_valid(raise_exception=True)
+        payment = serializer.save()
+
+        event.payment = payment
+        event.save()
+
+    def create_bill(self, event):
+        create_bill_url = f'{settings.FLIP_BASE_URL}/pwf/bill'
+        payload = {
+            'title': event.id,
+            'type': 'MULTIPLE',
+            'step': 1,
+        }
+        headers = {
+            'Content-Type': 'application/x-www-form-urlencoded',
+        }
+        response = requests.request("POST", create_bill_url, headers=headers, data=payload,
+                                    auth=(f'{settings.FLIP_API_SECRET_KEY}:', ''))
+        bill = response.json()
+        return bill
 
     @action(detail=True, methods=['post'], permission_classes=[permissions.IsAuthenticated, IsVerifiedEvent],
             url_path='join', url_name='join')
