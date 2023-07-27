@@ -37,6 +37,26 @@ class Payment(BaseModel):
         unique_together = ['link_id', 'is_deleted']
 
 
+class Disbursement(BaseModel):
+    STATUS = ['PENDING', 'DONE', 'CANCELLED']
+
+    id = models.IntegerField(primary_key=True)
+    user_id = models.IntegerField()
+    amount = models.IntegerField()
+    status = models.CharField()
+    timestamp = models.DateTimeField()
+    bank_code = models.CharField()
+    account_number = models.CharField()
+    recipient_name = models.CharField()
+    fee = models.IntegerField()
+    beneficiary_email = models.TextField()
+    idempotency_key = models.CharField()
+    receipt = models.CharField(null=True, blank=True, default=None)
+
+    class Meta:
+        unique_together = ['id', 'is_deleted']
+
+
 class Event(GeoLocationModel):
     BANK_CODE = [('mandiri', 'mandiri'), ('bri', 'bri'), ('bni', 'bni'), ('bca', 'bca'), ('bsm', 'bsm'),
                  ('cimb', 'cimb'), ('muamalat', 'muamalat'), ('danamon', 'danamon'), ('permata', 'permata'),
@@ -97,6 +117,7 @@ class Event(GeoLocationModel):
     supports = models.ManyToManyField(User, related_name='events_support')
     is_verified = models.BooleanField(default=False)
     payment = models.OneToOneField(Payment, on_delete=models.CASCADE, null=True, blank=True)
+    disbursement = models.OneToOneField(Disbursement, on_delete=models.CASCADE, null=True, blank=True)
     total_donation = models.IntegerField(default=0)
 
     class Meta:

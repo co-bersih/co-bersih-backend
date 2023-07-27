@@ -1,7 +1,7 @@
 from apps.user.models import User
 from apps.user.serializers import UserSerializer
 from rest_framework import serializers
-from .models import Event, Payment
+from .models import Event, Payment, Disbursement
 
 
 class EventSerializer(serializers.ModelSerializer):
@@ -16,6 +16,12 @@ class EventSerializer(serializers.ModelSerializer):
         model = Event
         fields = ['id', 'host', 'name', 'total_participant', 'description', 'preparation', 'image', 'image_url',
                   'latitude', 'longitude', 'start_date', 'end_date', 'is_verified', 'account_number', 'bank_code']
+
+    def validate_account_number(self, value):
+        if not value.isnumeric():
+            raise serializers.ValidationError('account number must be numeric', code='invalid_account_number')
+
+        return value
 
     def validate(self, data):
         """
@@ -64,4 +70,10 @@ class StaffSerializer(serializers.Serializer):
 class PaymentSerializer(serializers.ModelSerializer):
     class Meta:
         model = Payment
+        fields = '__all__'
+
+
+class DisbursementSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Disbursement
         fields = '__all__'
