@@ -1,7 +1,7 @@
 from apps.user.models import User
 from apps.user.serializers import UserSerializer
 from rest_framework import serializers
-from .models import Event, Payment
+from .models import Event, Payment, Disbursement
 
 
 class EventSerializer(serializers.ModelSerializer):
@@ -70,4 +70,10 @@ class StaffSerializer(serializers.Serializer):
 class PaymentSerializer(serializers.ModelSerializer):
     class Meta:
         model = Payment
+        fields = '__all__'
+
+
+class DisbursementSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Disbursement
         fields = '__all__'

@@ -1,3 +1,4 @@
+import datetime
 import json
 
 import requests
@@ -16,11 +17,10 @@ from apps.user.models import User
 from apps.user.serializers import UserSerializer
 from apps.utils.filters import GeoPointFilter
 from .filters import EventFilter
-from .models import Event
-from .models import Payment
+from .models import Event, Payment, Disbursement
 from .permissions import IsHostOrReadOnly, IsVerifiedEvent, IsStaff, IsFlipForBusiness, IsHost
-from .serializers import EventSerializer, EventDetailSerializer, StaffSerializer
-from .serializers import PaymentSerializer
+from .serializers import EventSerializer, EventDetailSerializer, StaffSerializer, PaymentSerializer, \
+    DisbursementSerializer
 
 
 # Create your views here.
@@ -92,12 +92,14 @@ class EventViewSet(viewsets.ModelViewSet):
         event.payment = payment
         event.save()
 
-    def create_bill(self, event):
+    @staticmethod
+    def create_bill(event):
         create_bill_url = f'{settings.FLIP_BASE_URL}/pwf/bill'
         payload = {
             'title': event.id,
             'type': 'MULTIPLE',
             'step': 1,
+            'amount': 15000,
         }
         headers = {
             'Content-Type': 'application/x-www-form-urlencoded',
@@ -180,6 +182,72 @@ class EventViewSet(viewsets.ModelViewSet):
             'account_number': event.account_number,
             'bank_code': event.bank_code
         })
+
+    @action(detail=True, methods=['post'], url_path='disbursement', url_name='disbursement',
+            permission_classes=[permissions.IsAuthenticated, IsHost])
+    def disbursement(self, request, pk, **kwargs):
+        event = self.get_object()
+        minimum_donation = 15000
+
+        if event.total_donation < minimum_donation:
+            raise ValidationError(f'event\'s total donation is not sufficient to disburse (min: Rp15.000,00)')
+
+        response = self.create_disbursement(event)
+
+        if response.status_code != 200:
+            errors = response.json()['errors']
+            raise ValidationError([error['message'] for error in errors])
+
+        self.set_event_disbursement(event, response.json())
+        return Response({'detail': 'Disbursement is being processed'}, status=status.HTTP_200_OK)
+
+    @staticmethod
+    def create_disbursement(event):
+        create_bill_url = f'{settings.FLIP_BASE_URL_NEW}/disbursement'
+        transfer_fee = 2400
+        payload = {
+            'account_number': event.account_number,
+            'bank_code': event.bank_code,
+            'amount': event.total_donation - transfer_fee,
+            'remark': f'co-bersih donation',
+            'beneficiary_email': ', '.join([staff.email for staff in event.staffs.all()]),
+        }
+        headers = {
+            'Content-Type': 'application/x-www-form-urlencoded',
+            'idempotency-key': str(event.id),
+            'X-TIMESTAMP': datetime.datetime.now().astimezone().replace(microsecond=0).isoformat()
+        }
+        response = requests.request("POST", create_bill_url, headers=headers, data=payload,
+                                    auth=(f'{settings.FLIP_API_SECRET_KEY}:', ''))
+        return response
+
+    @staticmethod
+    def set_event_disbursement(event, disbursement_data):
+        if event.disbursement:
+            serializer = DisbursementSerializer(event.disbursement, data=disbursement_data, partial=True)
+            serializer.is_valid(raise_exception=True)
+            serializer.save()
+        else:
+            serializer = DisbursementSerializer(data=disbursement_data)
+            serializer.is_valid(raise_exception=True)
+            disbursement = serializer.save()
+
+            event.disbursement = disbursement
+            event.save()
+
+    @action(detail=False, methods=['post'], url_path='money-transfer', url_name='money-transfer',
+            permission_classes=[IsFlipForBusiness])
+    def money_transfer(self, request):
+        disbursement_data = json.loads(request.data['data'])
+        disbursement = Disbursement.objects.get(pk=int(disbursement_data['id']))
+        event = disbursement.event
+        self.set_event_disbursement(event, disbursement_data)
+
+        if disbursement_data['status'] == "DONE":
+            event.total_donation = 0
+            event.save()
+
+        return Response(status=status.HTTP_200_OK)
 
 
 class EventJoinedUserView(ListAPIView):
