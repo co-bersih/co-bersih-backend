@@ -17,6 +17,12 @@ class EventSerializer(serializers.ModelSerializer):
         fields = ['id', 'host', 'name', 'total_participant', 'description', 'preparation', 'image', 'image_url',
                   'latitude', 'longitude', 'start_date', 'end_date', 'is_verified', 'account_number', 'bank_code']
 
+    def validate_account_number(self, value):
+        if not value.isnumeric():
+            raise serializers.ValidationError('account number must be numeric', code='invalid_account_number')
+
+        return value
+
     def validate(self, data):
         """
         Check that start_date is before end_date.

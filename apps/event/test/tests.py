@@ -244,6 +244,16 @@ class CRUDEventTest(TestCase):
         self.assertEquals(event.account_number, updated_data['account_number'])
         self.assertEquals(event.bank_code, updated_data['bank_code'])
 
+    def test_patch_event_account_with_invalid_account_number(self):
+        event_detail_url = reverse('event-detail', kwargs={'pk': self.event_id})
+
+        updated_data = {
+            'account_number': 'notnumeric',
+            'bank_code': 'bca'
+        }
+
+        response = self.client.patch(event_detail_url, updated_data)
+        self.assertEquals(response.status_code, status.HTTP_400_BAD_REQUEST)
     def test_patch_event_account_as_anon(self):
         self.user_manager.logout_user()
         event_detail_url = reverse('event-detail', kwargs={'pk': self.event_id})
