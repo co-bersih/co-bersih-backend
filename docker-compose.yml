@@ -19,7 +19,7 @@ services:
       build:
         context: .
       image: veivel/co-bersih-backend-api:latest
-      command: bash -c "sleep 8 && python3 manage.py migrate && python3 manage.py runserver 0.0.0.0:8000"
+      command: bash -c "sleep 8 && python3 -m pip install -r requirements.txt && python3 manage.py migrate && python3 manage.py runserver 0.0.0.0:8000"
       volumes:
         - .:/app
       ports:
