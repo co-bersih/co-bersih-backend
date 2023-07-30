@@ -97,6 +97,7 @@ INSTALLED_APPS = [
     'apps.user',
     'apps.event',
     'apps.report',
+    'apps.blog',
 ]
 
 MIDDLEWARE = [
